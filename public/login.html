@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acceso | Gestion de Conocimiento ONG</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="login-page">
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="brand">
+        <span class="brand-mark">GC</span>
+        <div>
+          <strong id="login-title">Gestion de Conocimiento ONG</strong>
+          <span>Wiki institucional, busqueda y analitica social</span>
+        </div>
+      </div>
+      <form class="form-grid" data-login-form>
+        <label>
+          Correo
+          <input name="email" type="email" value="admin@ongkms.test" autocomplete="email" required>
+        </label>
+        <label>
+          Contrasena
+          <input name="password" type="password" value="demo123" autocomplete="current-password" required>
+        </label>
+        <button type="submit">Ingresar</button>
+        <p class="muted" data-login-message>Usa demo123 con cualquier cuenta de prueba.</p>
+      </form>
+      <div class="grid">
+        <button class="secondary" type="button" data-demo-login="admin@ongkms.test">Administrador</button>
+        <button class="secondary" type="button" data-demo-login="creador@ongkms.test">Creador ONG</button>
+        <button class="secondary" type="button" data-demo-login="voluntario@ongkms.test">Voluntario</button>
+      </div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

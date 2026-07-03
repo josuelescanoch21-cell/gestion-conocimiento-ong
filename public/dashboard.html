@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard | Gestion de Conocimiento ONG</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Navegacion principal">
+      <a class="brand" href="dashboard.html">
+        <span class="brand-mark">GC</span>
+        <div><strong>ONG KMS</strong><span>Base de conocimiento</span></div>
+      </a>
+      <nav>
+        <ul class="nav-list">
+          <li><a class="nav-link" data-page="dashboard" href="dashboard.html"><span class="nav-icon">IN</span>Inicio</a></li>
+          <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html"><span class="nav-icon">KC</span>Conocimiento</a></li>
+        <li><a class="nav-link" data-page="leyes" href="leyes.html"><span class="nav-icon">LY</span>Leyes ONG</a></li>
+          <li><a class="nav-link" data-page="documentos" href="documentos.html"><span class="nav-icon">DO</span>Documentos</a></li>
+          <li><a class="nav-link" data-page="oportunidades" href="oportunidades.html"><span class="nav-icon">OP</span>Oportunidades</a></li>
+          <li><a class="nav-link" data-page="analytics" href="analytics.html"><span class="nav-icon">AN</span>Analitica</a></li>
+        </ul>
+      </nav>
+      <section class="user-card">
+        <strong data-user-name></strong>
+        <span data-user-role></span>
+        <button class="ghost" type="button" onclick="logout()">Cerrar sesion</button>
+      </section>
+    </aside>
+    <main class="main" id="contenido">
+      <header class="topbar">
+        <div class="search-box">
+          <input data-search-input type="search" placeholder="Buscar por titulo, descripcion, contenido, etiquetas o autor" aria-label="Busqueda principal">
+          <div class="suggestions" data-suggestions></div>
+        </div>
+        <button class="button" type="button" data-role-only="administrador,creador_ong" onclick="window.KMS.openArticleForm()">Nuevo contenido</button>
+      </header>
+      <section class="content">
+        <div class="page-header">
+          <div>
+            <h1>Centro de Conocimiento ONG</h1>
+            <p>Arquitectura tipo wiki para capturar, recuperar y mejorar conocimiento operativo, social y documental.</p>
+          </div>
+        </div>
+        <section class="grid cols-4" aria-label="Indicadores principales">
+          <article class="card stat"><span class="muted">Documentos visibles</span><strong id="statDocs">0</strong></article>
+          <article class="card stat"><span class="muted">Categorias</span><strong id="statCategories">0</strong></article>
+          <article class="card stat"><span class="muted">Busquedas sin resultado</span><strong id="statSearches">0</strong></article>
+          <article class="card stat"><span class="muted">Oportunidades activas</span><strong id="statOpportunities">0</strong></article>
+        </section>
+        <section class="panel" data-role-only="administrador,creador_ong">
+          <h2>Resumen operativo real</h2>
+          <p class="muted">Indicadores obtenidos directamente desde Supabase segun el rol actual.</p>
+          <div class="mini-list analytics-summary" id="dashboardAnalytics"></div>
+        </section>
+        <section class="panel">
+          <div class="section-title-row">
+            <div><h2>Actualizaciones recientes</h2><p class="muted">Inicio queda como resumen; la taxonomia completa esta en Conocimiento y Leyes ONG.</p></div>
+            <a class="button secondary" href="conocimiento.html">Ir a conocimiento</a>
+          </div>
+          <div class="grid cols-3" id="recentItems" data-search-results></div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/search.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', window.KMS.renderDashboard);</script>
+</body>
+</html>

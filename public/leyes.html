@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Leyes ONG | Gestion de Conocimiento ONG</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="dashboard.html"><span class="brand-mark">GC</span><div><strong>ONG KMS</strong><span>Marco legal ONG</span></div></a>
+      <nav><ul class="nav-list">
+        <li><a class="nav-link" data-page="dashboard" href="dashboard.html"><span class="nav-icon">IN</span>Inicio</a></li>
+        <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html"><span class="nav-icon">KC</span>Conocimiento</a></li>
+        <li><a class="nav-link" data-page="leyes" href="leyes.html"><span class="nav-icon">LY</span>Leyes ONG</a></li>
+        <li><a class="nav-link" data-page="documentos" href="documentos.html"><span class="nav-icon">DO</span>Documentos</a></li>
+        <li><a class="nav-link" data-page="oportunidades" href="oportunidades.html"><span class="nav-icon">OP</span>Oportunidades</a></li>
+        <li><a class="nav-link" data-page="analytics" href="analytics.html"><span class="nav-icon">AN</span>Analitica</a></li>
+      </ul></nav>
+      <section class="user-card"><strong data-user-name></strong><span data-user-role></span><button class="ghost" type="button" onclick="logout()">Cerrar sesion</button></section>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="search-box"><input id="lawSearch" type="search" placeholder="Buscar leyes por tramite, entidad, etiqueta o referencia"><div class="suggestions" data-suggestions></div></div>
+        <div class="topbar-actions"><button type="button" data-role-only="administrador,creador_ong" onclick="window.KMS.openTaxonomyManager()">Gestionar taxonomia</button><button type="button" data-role-only="administrador,creador_ong" onclick="window.KMS.openLawForm()">Nueva ley / norma</button></div>
+      </header>
+      <section class="content">
+        <div class="page-header">
+          <div><h1>Taxonomia de leyes para crear una ONG</h1><p>Ruta legal organizada por Constitucion, SUNARP, APCI, SUNAT y Gobernanza. Los voluntarios pueden consultar; Administrador y Creador ONG pueden modificar.</p></div>
+        </div>
+        <section class="panel legal-note">
+          <strong>Nota importante:</strong> esta seccion es informativa y debe verificarse con fuentes oficiales o asesoria legal antes de usarla como politica institucional.
+        </section>
+        <section class="panel">
+          <div class="filters">
+            <select id="lawSubcategoryFilter" aria-label="Filtrar por etapa legal"><option value="">Todas las subcategorias</option></select>
+            <select id="lawRoleFilter" aria-label="Filtrar por rol permitido"><option value="">Cualquier rol</option><option value="administrador">Administrador</option><option value="creador_ong">Creador ONG</option><option value="voluntario">Voluntario</option></select>
+            <select data-filter-type aria-label="Filtrar por tipo"><option value="ley">Ley / normativa ONG</option></select>
+          </div>
+        </section>
+        <section class="split">
+          <aside class="panel knowledge-tree"><h2>Secuencia legal</h2><div id="lawsTree"></div></aside>
+          <div class="grid cols-2" id="lawItems"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      window.KMS.renderLaws();
+      ['lawSearch','lawSubcategoryFilter','lawRoleFilter'].forEach((id) => {
+        const node = document.getElementById(id);
+        if (node) node.addEventListener('input', window.KMS.renderLaws);
+        if (node) node.addEventListener('change', window.KMS.renderLaws);
+      });
+    });
+  </script>
+</body>
+</html>
