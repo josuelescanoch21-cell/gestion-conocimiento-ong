@@ -342,9 +342,15 @@ async function renderDashboard() {
   renderCards('recentItems', visible.slice(0, 6));
 }
 async function renderKnowledge() {
-  layoutInit('conocimiento'); const categories = await loadTaxonomy(); renderTree('knowledgeTree', categories); populateCategoryFilters(categories);
-  const params = new URLSearchParams(location.search); const category = params.get('categoria');
-  let items = (await loadKnowledge()).filter((item) => canRead(item) && item.category !== 'Leyes para ONG');
+  layoutInit('conocimiento');
+  const categories = (await loadTaxonomy()).filter((category) => category.name !== 'Leyes para ONG');
+  renderTree('knowledgeTree', categories);
+  populateCategoryFilters(categories);
+  const params = new URLSearchParams(location.search);
+  const category = params.get('categoria');
+  let items = (await loadKnowledge()).filter((item) =>
+    canRead(item) && item.category !== 'Leyes para ONG' && item.type !== 'ley' && item.document_type !== 'ley'
+  );
   if (category) items = items.filter((item) => item.category === category);
   renderCards('knowledgeItems', items);
 }

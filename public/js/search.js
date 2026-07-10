@@ -2,7 +2,13 @@ function normalize(value) {
   return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-function runLocalSearch(query, filters = {}) {
+function matchesPageScope(item, scope) {
+  if (scope === 'knowledge') return item.category !== 'Leyes para ONG' && item.type !== 'ley' && item.document_type !== 'ley';
+  if (scope === 'laws') return item.category === 'Leyes para ONG' || item.type === 'ley' || item.document_type === 'ley';
+  return true;
+}
+
+function runLocalSearch(query, filters = {}, scope = '') {
   const needle = normalize(query);
   return window.KMS.demo.items.filter((item) => {
     const text = normalize([item.title, item.description, item.content, item.tags.join(' '), item.author].join(' '));
@@ -11,11 +17,11 @@ function runLocalSearch(query, filters = {}) {
     const matchesAuthor = !filters.author || normalize(item.author).includes(normalize(filters.author));
     const matchesType = !filters.type || item.type === filters.type;
     const matchesRole = !filters.role || item.roles.includes(filters.role);
-    return matchesText && matchesCategory && matchesAuthor && matchesType && matchesRole && window.KMS.canRead(item);
+    return matchesText && matchesCategory && matchesAuthor && matchesType && matchesRole && matchesPageScope(item, scope) && window.KMS.canRead(item);
   });
 }
 
-async function runRemoteSearch(query, filters = {}) {
+async function runRemoteSearch(query, filters = {}, scope = '') {
   const params = new URLSearchParams();
   if (query) params.set('q', query);
   if (filters.category) params.set('categoryName', filters.category);
@@ -31,7 +37,7 @@ async function runRemoteSearch(query, filters = {}) {
     organization: item.organizations?.name || item.organization,
     type: item.document_type || item.type,
     roles: item.visible_to_roles || item.roles || []
-  }));
+  })).filter((item) => matchesPageScope(item, scope) && window.KMS.canRead(item));
 }
 
 function initSearch() {
@@ -40,6 +46,7 @@ function initSearch() {
   const results = document.querySelector('[data-search-results]');
   if (!input) return;
   let timer;
+  const scope = document.body.dataset.searchScope || '';
 
   const execute = async () => {
     const filters = {
@@ -49,8 +56,8 @@ function initSearch() {
       role: document.querySelector('[data-filter-role]')?.value
     };
     let found;
-    try { found = await runRemoteSearch(input.value, filters); }
-    catch { found = runLocalSearch(input.value, filters); }
+    try { found = await runRemoteSearch(input.value, filters, scope); }
+    catch { found = runLocalSearch(input.value, filters, scope); }
     if (results) window.KMS.renderCards(results.id, found);
 
     if (suggestions) {
