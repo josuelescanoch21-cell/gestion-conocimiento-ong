@@ -61,6 +61,10 @@
         if (node) node.addEventListener('input', window.KMS.renderLaws);
         if (node) node.addEventListener('change', window.KMS.renderLaws);
       });
+      document.addEventListener('click', (event) => {
+        const suggestions = document.querySelector('[data-suggestions]');
+        if (suggestions && !event.target.closest('.search-box')) suggestions.style.display = 'none';
+      });
     });
   </script>
 </body>

@@ -441,6 +441,32 @@ async function renderLaws() {
   const tagsTarget = byId('lawTagFilters');
   if (tagsTarget) tagsTarget.innerHTML = `<button type="button" class="tag-filter ${!activeTag ? 'active' : ''}" onclick="window.KMS.setLawTag('')">Todas</button>${allTags.map((tag) => `<button type="button" class="tag-filter ${activeTag === tag ? 'active' : ''}" onclick="window.KMS.setLawTag('${escapeHtml(String(tag).replace(/'/g, "\\'"))}')">${escapeHtml(tag)}</button>`).join('')}`;
 
+  const suggestions = document.querySelector('[data-suggestions]');
+  if (suggestions) {
+    const rawQuery = byId('lawSearch')?.value || '';
+    const suggestionTerms = [...new Set(filtered.flatMap((item) => [
+      item.title,
+      item.author,
+      ...(item.tags || [])
+    ]).filter(Boolean))]
+      .filter((term) => !query || normalizeSearchText(term).includes(query))
+      .slice(0, 8);
+
+    suggestions.innerHTML = suggestionTerms
+      .map((term) => `<button type="button">${escapeHtml(term)}</button>`)
+      .join('');
+    suggestions.style.display = rawQuery && suggestionTerms.length ? 'block' : 'none';
+
+    suggestions.querySelectorAll('button').forEach((button) => {
+      button.addEventListener('click', () => {
+        const searchInput = byId('lawSearch');
+        if (searchInput) searchInput.value = button.textContent;
+        suggestions.style.display = 'none';
+        renderLaws();
+      });
+    });
+  }
+
   const countTarget = byId('lawResultCount');
   if (countTarget) countTarget.textContent = `Mostrando ${filtered.length} de ${items.length} normas`;
   const activeTarget = byId('lawActiveFilters');
