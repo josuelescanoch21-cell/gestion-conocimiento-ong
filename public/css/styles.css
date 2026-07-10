@@ -697,3 +697,26 @@ th {
 
 /* Oculta controles restringidos hasta que JS confirme el rol */
 [data-role-only] { display: none; }
+
+/* Taxonomía legal y filtros de leyes */
+.law-results-bar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:16px; flex-wrap:wrap; }
+.active-filters { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.active-filters span { background:#eef4f1; border:1px solid #c9ddd5; color:#245a49; border-radius:999px; padding:6px 10px; font-size:.82rem; }
+.clear-filters { background:transparent; color:var(--primary); border:1px solid var(--border); padding:7px 10px; }
+.filter-label { display:block; margin:18px 0 8px; color:var(--muted); font-size:.9rem; font-weight:700; }
+.tag-filters { display:flex; gap:8px; flex-wrap:wrap; max-height:108px; overflow:auto; padding-bottom:2px; }
+.tag-filter, .tree-filter { border:1px solid var(--border); background:#fff; color:var(--text); box-shadow:none; }
+.tag-filter { padding:7px 11px; border-radius:999px; font-size:.82rem; }
+.tag-filter.active, .tree-filter.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.tree-filter { width:100%; justify-content:flex-start; margin-top:7px; padding:9px 10px; border-radius:8px; }
+.law-card { display:flex; flex-direction:column; gap:12px; }
+.law-card h3 { margin:0; line-height:1.35; }
+.law-category { display:inline-flex; align-items:center; border-radius:999px; padding:5px 9px; background:#e9f2ee; color:#245a49; font-size:.8rem; font-weight:800; }
+.law-reference { border-left:3px solid var(--primary); padding:9px 11px; background:#f7faf8; font-size:.88rem; line-height:1.5; }
+.tag-button { cursor:pointer; border:none; }
+.button-link { text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+#lawItems .empty-state { grid-column:1/-1; }
+@media (max-width: 760px) {
+  .law-results-bar { align-items:flex-start; }
+  .tag-filters { max-height:150px; }
+}

@@ -102,3 +102,19 @@ Las credenciales dependen de los usuarios insertados en `seed_final.sql`.
 ## Nota importante
 
 El archivo `public/js/app.js` contiene una función interna llamada `api()` para reutilizar la lógica antigua del frontend, pero ya no hace llamadas al backend de Railway. Esa función consulta Supabase directamente desde el navegador mediante `supabase-js`.
+
+## Actualización de taxonomía legal
+
+La página `public/leyes.html` incluye un catálogo de 30 normas reales relacionadas con la creación y gestión de una ONG en Perú, búsqueda sin tildes, filtros combinados por categoría, rol y etiqueta, contador de resultados y categorías vacías ocultas.
+
+Para actualizar una base de datos Supabase que ya fue creada con el seed anterior, ejecuta en el editor SQL:
+
+```sql
+-- contenido de database/migration_legal_taxonomy.sql
+```
+
+El archivo elimina únicamente los registros de la categoría `Leyes para ONG` y los reemplaza por el catálogo nuevo. No elimina documentos de las demás categorías.
+
+
+## Descripciones legales
+Las 30 fichas muestran en el campo de descripción un **artículo destacado (paráfrasis)** de la norma, con su número de artículo cuando corresponde. No se presenta como cita literal; debe contrastarse con la fuente oficial enlazada y con la versión vigente de la norma.
