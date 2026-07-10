@@ -36,6 +36,9 @@
               <option>Voluntariado</option><option>Donaciones</option><option>Beneficiarios</option><option>Proyectos sociales</option>
               <option>Capacitaciones</option><option>Documentos internos</option><option>Guias para voluntarios</option><option>Reportes de impacto</option>
             </select>
+            <select data-filter-subcategory aria-label="Filtrar por subcategoria">
+              <option value="">Todas las subcategorias</option>
+            </select>
             <input data-filter-author placeholder="Autor" aria-label="Filtrar por autor">
             <select data-filter-type aria-label="Filtrar por tipo">
               <option value="">Todo tipo</option><option value="articulo">Articulo</option><option value="guia">Guia</option><option value="reporte">Reporte</option><option value="plantilla">Plantilla</option><option value="politica">Politica</option>
@@ -44,6 +47,7 @@
               <option value="">Cualquier rol</option><option value="administrador">Administrador</option><option value="creador_ong">Creador ONG</option><option value="voluntario">Voluntario</option>
             </select>
           </div>
+          <p class="muted" data-results-count aria-live="polite"></p>
         </section>
         <section class="split">
           <aside class="panel knowledge-tree"><h2>Taxonomia</h2><div id="knowledgeTree"></div></aside>

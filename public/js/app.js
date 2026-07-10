@@ -299,7 +299,16 @@ function layoutInit(activePage) {
 
 function renderTree(targetId = 'knowledgeTree', categories = demo.categories) {
   const target = byId(targetId); if (!target) return;
-  target.innerHTML = categories.map((category) => `<div class="tree-category"><strong>${escapeHtml(category.name)}</strong>${(category.subs || category.subcategories || []).map((sub) => `<a href="${category.name === 'Leyes para ONG' ? 'leyes.html' : 'conocimiento.html?categoria=' + encodeURIComponent(category.name)}">${escapeHtml(sub.name || sub)}</a>`).join('')}</div>`).join('');
+  target.innerHTML = categories.map((category) => {
+    const categoryName = category.name || '';
+    const categoryUrl = `conocimiento.html?categoria=${encodeURIComponent(categoryName)}`;
+    const subs = category.subs || category.subcategories || [];
+    return `<div class="tree-category"><a class="tree-filter" href="${categoryUrl}"><strong>${escapeHtml(categoryName)}</strong></a>${subs.map((sub) => {
+      const subName = sub.name || sub;
+      const url = `${categoryUrl}&subcategoria=${encodeURIComponent(subName)}`;
+      return `<a href="${url}">${escapeHtml(subName)}</a>`;
+    }).join('')}</div>`;
+  }).join('');
 }
 
 function itemCard(raw) {
@@ -346,6 +355,7 @@ async function renderKnowledge() {
   const categories = (await loadTaxonomy()).filter((category) => category.name !== 'Leyes para ONG');
   renderTree('knowledgeTree', categories);
   populateCategoryFilters(categories);
+  document.dispatchEvent(new CustomEvent('kms:filters-ready'));
   const params = new URLSearchParams(location.search);
   const category = params.get('categoria');
   let items = (await loadKnowledge()).filter((item) =>
@@ -623,11 +633,31 @@ async function loadApplicants(id) { try { const payload = await api(`/api/opport
 async function updateApplication(opportunityId, applicationId, status) { try { await api(`/api/opportunities/${opportunityId}/applications/${applicationId}`, { method: 'PATCH', body: JSON.stringify({ status }) }); toast('Estado actualizado.'); loadApplicants(opportunityId); } catch (error) { toast(error.message, 'error'); } }
 
 
+function populateSubcategoryFilters(categories = [], selectedCategory = '') {
+  document.querySelectorAll('[data-filter-subcategory]').forEach((select) => {
+    const requested = new URLSearchParams(location.search).get('subcategoria') || select.value;
+    const source = selectedCategory
+      ? categories.filter((category) => category.name === selectedCategory)
+      : categories;
+    const names = [...new Set(source.flatMap((category) => (category.subcategories || category.subs || []).map((sub) => sub.name || sub)).filter(Boolean))];
+    select.innerHTML = '<option value="">Todas las subcategorias</option>' + names.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+    if (names.includes(requested)) select.value = requested;
+  });
+}
+
 function populateCategoryFilters(categories = []) {
   document.querySelectorAll('[data-filter-category]').forEach((select) => {
-    const current = select.value;
+    const requested = new URLSearchParams(location.search).get('categoria') || select.value;
     select.innerHTML = '<option value="">Todas las categorias</option>' + categories.map((category) => `<option value="${escapeHtml(category.name)}">${escapeHtml(category.name)}</option>`).join('');
-    select.value = current;
+    if (categories.some((category) => category.name === requested)) select.value = requested;
+    if (!select.dataset.taxonomyBound) {
+      select.addEventListener('change', () => {
+        populateSubcategoryFilters(categories, select.value);
+        document.querySelector('[data-filter-subcategory]')?.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      select.dataset.taxonomyBound = 'true';
+    }
+    populateSubcategoryFilters(categories, select.value);
   });
 }
 
