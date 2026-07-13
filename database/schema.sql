@@ -549,3 +549,138 @@ begin
   alter table knowledge_items add constraint knowledge_items_document_type_check
     check (document_type in ('articulo', 'guia', 'reporte', 'plantilla', 'politica', 'documento', 'ley'));
 end $$;
+
+-- ============================================================
+-- cambio para el foro: Iteracion 8 - Foro de la comunidad
+-- Dos tableros fijos: "buenas_practicas" y "malas_practicas".
+-- Reglas de negocio:
+--   * Creador ONG y Voluntario pueden crear temas y responder.
+--   * Administrador NO crea temas ni responde: solo modera
+--     (fijar/desfijar, cerrar/reabrir, eliminar en modo soft-delete).
+--   * Los temas eliminados no se borran fisicamente: se marcan
+--     is_removed = true para dejar rastro de moderacion (igual
+--     criterio que audit_logs/version_history en este proyecto).
+-- ============================================================
+
+create table if not exists forum_topics (
+  id uuid primary key default gen_random_uuid(),
+  board text not null check (board in ('buenas_practicas', 'malas_practicas')),
+  title text not null,
+  content text not null,
+  organization_id uuid references organizations(id) on delete set null,
+  created_by uuid references users(id) on delete set null,
+  author_name text not null,
+  status text not null default 'abierto' check (status in ('abierto', 'cerrado')),
+  is_pinned boolean not null default false,
+  pinned_by uuid references users(id) on delete set null,
+  pinned_at timestamptz,
+  closed_by uuid references users(id) on delete set null,
+  closed_at timestamptz,
+  is_removed boolean not null default false,
+  removed_by uuid references users(id) on delete set null,
+  removed_at timestamptz,
+  removal_reason text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists forum_replies (
+  id uuid primary key default gen_random_uuid(),
+  topic_id uuid not null references forum_topics(id) on delete cascade,
+  content text not null,
+  organization_id uuid references organizations(id) on delete set null,
+  created_by uuid references users(id) on delete set null,
+  author_name text not null,
+  is_removed boolean not null default false,
+  removed_by uuid references users(id) on delete set null,
+  removed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_forum_topics_board on forum_topics(board, is_pinned desc, created_at desc);
+create index if not exists idx_forum_topics_status on forum_topics(status);
+create index if not exists idx_forum_topics_org on forum_topics(organization_id);
+create index if not exists idx_forum_replies_topic on forum_replies(topic_id, created_at);
+
+drop trigger if exists trg_forum_topics_updated_at on forum_topics;
+create trigger trg_forum_topics_updated_at
+before update on forum_topics
+for each row execute function set_updated_at();
+
+alter table forum_topics enable row level security;
+alter table forum_replies enable row level security;
+
+-- Lectura: cualquier persona autenticada ve temas/respuestas no eliminados.
+-- El administrador ve tambien los eliminados, para poder auditar su propia moderacion.
+drop policy if exists "forum topics readable" on forum_topics;
+create policy "forum topics readable" on forum_topics
+for select using (
+  (not is_removed) or app_user_role() = 'administrador'
+);
+
+-- Creacion de temas: solo creador_ong y voluntario. El administrador NO puede crear temas.
+drop policy if exists "forum topics created by members" on forum_topics;
+create policy "forum topics created by members" on forum_topics
+for insert with check (
+  app_user_role() in ('creador_ong', 'voluntario') and created_by = app_user_id()
+);
+
+-- Moderacion de temas: fijar, cerrar/reabrir y eliminar (soft-delete) es exclusivo del administrador.
+drop policy if exists "forum topics moderated by admin" on forum_topics;
+create policy "forum topics moderated by admin" on forum_topics
+for update using (app_user_role() = 'administrador') with check (app_user_role() = 'administrador');
+
+drop policy if exists "forum replies readable" on forum_replies;
+create policy "forum replies readable" on forum_replies
+for select using (
+  (not is_removed) or app_user_role() = 'administrador'
+);
+
+-- Respuestas: solo creador_ong y voluntario, y solo si el tema sigue abierto y no fue eliminado.
+drop policy if exists "forum replies created by members" on forum_replies;
+create policy "forum replies created by members" on forum_replies
+for insert with check (
+  app_user_role() in ('creador_ong', 'voluntario')
+  and created_by = app_user_id()
+  and exists (
+    select 1 from forum_topics t
+    where t.id = topic_id and t.status = 'abierto' and not t.is_removed
+  )
+);
+
+-- Eliminar (soft-delete) una respuesta es una accion de moderacion exclusiva del administrador.
+drop policy if exists "forum replies moderated by admin" on forum_replies;
+create policy "forum replies moderated by admin" on forum_replies
+for update using (app_user_role() = 'administrador') with check (app_user_role() = 'administrador');
+
+-- ============================================================
+-- cambio para el foro (rediseno): Iteracion 9 - Reacciones "Util"
+-- Permite a creador_ong y voluntario marcar un tema como util (like tipo
+-- Reddit). Un usuario solo puede reaccionar una vez por tema (toggle).
+-- ============================================================
+
+create table if not exists forum_reactions (
+  id uuid primary key default gen_random_uuid(),
+  topic_id uuid not null references forum_topics(id) on delete cascade,
+  user_id uuid not null references users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (topic_id, user_id)
+);
+
+create index if not exists idx_forum_reactions_topic on forum_reactions(topic_id);
+
+alter table forum_reactions enable row level security;
+
+drop policy if exists "forum reactions readable" on forum_reactions;
+create policy "forum reactions readable" on forum_reactions
+for select using (auth.role() = 'authenticated');
+
+drop policy if exists "forum reactions insert own" on forum_reactions;
+create policy "forum reactions insert own" on forum_reactions
+for insert with check (
+  app_user_role() in ('creador_ong', 'voluntario') and user_id = app_user_id()
+);
+
+drop policy if exists "forum reactions delete own" on forum_reactions;
+create policy "forum reactions delete own" on forum_reactions
+for delete using (user_id = app_user_id());

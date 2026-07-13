@@ -40,10 +40,11 @@ if (Array.isArray(window.ONG_LAWS)) {
 }
 
 const roleLabels = { administrador: 'Administrador', creador_ong: 'Creador ONG', voluntario: 'Voluntario' };
+// cambio para el foro: se agrega 'foro' a los 3 roles para que el link aparezca en el menu de todos.
 const navByRole = {
-  administrador: ['dashboard', 'conocimiento', 'leyes', 'documentos', 'oportunidades', 'analytics', 'admin'],
-  creador_ong: ['dashboard', 'conocimiento', 'leyes', 'documentos', 'oportunidades', 'analytics'],
-  voluntario: ['dashboard', 'conocimiento', 'leyes', 'documentos', 'oportunidades']
+  administrador: ['dashboard', 'conocimiento', 'leyes', 'documentos', 'oportunidades', 'foro', 'analytics', 'admin'],
+  creador_ong: ['dashboard', 'conocimiento', 'leyes', 'documentos', 'oportunidades', 'foro', 'analytics'],
+  voluntario: ['dashboard', 'conocimiento', 'leyes', 'documentos', 'oportunidades', 'foro']
 };
 
 function currentUser() {
@@ -198,6 +199,72 @@ async function api(path, options = {}) {
 
   const docStatus = path.match(/^\/api\/documents\/([^/]+)$/);
   if (docStatus && method === 'PATCH') return run(db.from('user_documents').update(body).eq('id', docStatus[1]).select().single());
+
+  // cambio para el foro: rutas para temas (forum_topics) y respuestas (forum_replies).
+  // El foro solo permite crear temas/respuestas a creador_ong y voluntario; el administrador
+  // unicamente modera (fijar, cerrar/reabrir, eliminar). Esta validacion de rol se hace aqui
+  // en el frontend porque el proyecto no usa una sesion real de Supabase Auth (ver auth.js).
+  if (path.startsWith('/api/forum/topics') && method === 'GET' && !path.includes('/replies')) {
+    const url = new URL(path, window.location.origin);
+    const board = url.searchParams.get('board');
+    const single = path.match(/^\/api\/forum\/topics\/([^/?]+)$/);
+    if (single) {
+      const topic = await run(db.from('forum_topics').select('*, organizations(name), users!created_by(full_name), forum_reactions(user_id)').eq('id', single[1]).single());
+      const replies = await run(db.from('forum_replies').select('*, users!created_by(full_name)').eq('topic_id', single[1]).order('created_at', { ascending: true }));
+      return { topic, replies };
+    }
+    let query = db.from('forum_topics').select('*, organizations(name), users!created_by(full_name), forum_replies(id), forum_reactions(user_id)').order('is_pinned', { ascending: false }).order('created_at', { ascending: false });
+    if (board) query = query.eq('board', board);
+    return run(query);
+  }
+
+  if (path === '/api/forum/topics' && method === 'POST') {
+    if (!['creador_ong', 'voluntario'].includes(user.role)) throw new Error('Solo Creador ONG y Voluntario pueden crear temas en el foro.');
+    const payload = { board: body.board, title: body.title, content: body.content, author_name: user.full_name || user.name || user.email || 'Usuario', created_by: user.id || null, organization_id: user.organization_id || null, status: 'abierto' };
+    return run(db.from('forum_topics').insert(payload).select().single());
+  }
+
+  const forumModerateMatch = path.match(/^\/api\/forum\/topics\/([^/]+)$/);
+  if (forumModerateMatch && method === 'PATCH') {
+    if (user.role !== 'administrador') throw new Error('Solo el administrador puede moderar temas del foro.');
+    const payload = { ...body };
+    if ('is_pinned' in payload) { payload.pinned_by = user.id || null; payload.pinned_at = new Date().toISOString(); }
+    if ('status' in payload) { payload.closed_by = user.id || null; payload.closed_at = new Date().toISOString(); }
+    if ('is_removed' in payload) { payload.removed_by = user.id || null; payload.removed_at = new Date().toISOString(); }
+    return run(db.from('forum_topics').update(payload).eq('id', forumModerateMatch[1]).select().single());
+  }
+
+  const forumReplyMatch = path.match(/^\/api\/forum\/topics\/([^/]+)\/replies$/);
+  if (forumReplyMatch && method === 'POST') {
+    if (!['creador_ong', 'voluntario'].includes(user.role)) throw new Error('Solo Creador ONG y Voluntario pueden responder en el foro.');
+    const topic = await run(db.from('forum_topics').select('status,is_removed').eq('id', forumReplyMatch[1]).single());
+    if (topic.status === 'cerrado' || topic.is_removed) throw new Error('Este tema esta cerrado y no admite nuevas respuestas.');
+    const payload = { topic_id: forumReplyMatch[1], content: body.content, author_name: user.full_name || user.name || user.email || 'Usuario', created_by: user.id || null, organization_id: user.organization_id || null };
+    return run(db.from('forum_replies').insert(payload).select().single());
+  }
+
+  const forumReplyModerateMatch = path.match(/^\/api\/forum\/replies\/([^/]+)$/);
+  if (forumReplyModerateMatch && method === 'PATCH') {
+    if (user.role !== 'administrador') throw new Error('Solo el administrador puede eliminar respuestas del foro.');
+    const payload = { ...body, removed_by: user.id || null, removed_at: new Date().toISOString() };
+    return run(db.from('forum_replies').update(payload).eq('id', forumReplyModerateMatch[1]).select().single());
+  }
+
+  // cambio para el foro (rediseno): reaccion "Util" (like) por tema. Toggle: si ya reacciono, se
+  // quita su reaccion; si no, se agrega. Un usuario solo puede tener una reaccion por tema
+  // (constraint unique(topic_id, user_id) en la tabla forum_reactions).
+  const forumReactMatch = path.match(/^\/api\/forum\/topics\/([^/]+)\/react$/);
+  if (forumReactMatch && method === 'POST') {
+    if (!['creador_ong', 'voluntario'].includes(user.role)) throw new Error('Solo Creador ONG y Voluntario pueden reaccionar en el foro.');
+    if (!user.id) throw new Error('No se pudo identificar tu usuario.');
+    const existing = await run(db.from('forum_reactions').select('id').eq('topic_id', forumReactMatch[1]).eq('user_id', user.id).maybeSingle());
+    if (existing) {
+      await run(db.from('forum_reactions').delete().eq('id', existing.id));
+      return { reacted: false };
+    }
+    await run(db.from('forum_reactions').insert({ topic_id: forumReactMatch[1], user_id: user.id }));
+    return { reacted: true };
+  }
 
   if (path.startsWith('/api/search')) {
     const url = new URL(path, window.location.origin);
@@ -477,6 +544,13 @@ async function renderLaws() {
 
   const target = byId('lawItems');
   if (target) target.innerHTML = filtered.length ? filtered.map(lawCard).join('') : '<div class="empty-state"><strong>No se encontraron normas.</strong><p>Cambia la búsqueda, categoría, rol o etiqueta para volver a mostrar resultados.</p></div>';
+
+  // cambio para el chat IA: guarda una version resumida de las leyes visibles en este momento
+  // (respetando los filtros actuales) para que el chat IA responda con base en esto y no invente.
+  state.lawsChatContext = filtered.slice(0, 12).map((item) => ({
+    title: item.title, description: item.description, content: item.content,
+    legal_reference: item.legal_reference, source_url: item.source_url
+  }));
 }
 function clearLawFilters() {
   if (byId('lawSearch')) byId('lawSearch').value = '';
@@ -772,4 +846,8 @@ async function updateDocumentStatus(id, status) {
 }
 
 
-window.KMS = { demo, currentUser, canRead, escapeHtml, layoutInit, renderDashboard, renderKnowledge, renderLaws, setLawTag, setLawCategory, clearLawFilters, openLawForm, renderDocuments, renderOpportunities, renderCards, api, toast, openModal, closeModal, openArticle, openArticleForm, saveArticle, publishArticle, favoriteArticle, renderMyApplications, renderMyFavorites, openOpportunityForm, saveOpportunity, openApplyForm, submitApplication, loadApplicants, updateApplication, loadTaxonomy, openTaxonomyManager, trackFrontendEvent, openProfileForm, saveProfile, openDocumentForm, saveDocument, updateDocumentStatus };
+window.KMS = { demo, currentUser, canRead, escapeHtml, layoutInit, renderDashboard, renderKnowledge, renderLaws, setLawTag, setLawCategory, clearLawFilters, openLawForm, renderDocuments, renderOpportunities, renderCards, api, toast, openModal, closeModal, openArticle, openArticleForm, saveArticle, publishArticle, favoriteArticle, renderMyApplications, renderMyFavorites, openOpportunityForm, saveOpportunity, openApplyForm, submitApplication, loadApplicants, updateApplication, loadTaxonomy, openTaxonomyManager, trackFrontendEvent, openProfileForm, saveProfile, openDocumentForm, saveDocument, updateDocumentStatus,
+  // cambio para el chat IA: getter de las leyes visibles/filtradas, usado por public/js/legal-chat.js
+  getLawsChatContext: () => state.lawsChatContext || [],
+  // cambio para el foro: se expone para reutilizarla en la busqueda del foro (public/js/forum.js)
+  normalizeSearchText };

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Foro | Gestion de Conocimiento ONG</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="dashboard.html"><span class="brand-mark">GC</span><div><strong>ONG KMS</strong><span>Foro</span></div></a>
+      <nav><ul class="nav-list">
+        <li><a class="nav-link" data-page="dashboard" href="dashboard.html"><span class="nav-icon">IN</span>Inicio</a></li>
+        <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html"><span class="nav-icon">KC</span>Conocimiento</a></li>
+        <li><a class="nav-link" data-page="leyes" href="leyes.html"><span class="nav-icon">LY</span>Leyes ONG</a></li>
+        <li><a class="nav-link" data-page="documentos" href="documentos.html"><span class="nav-icon">DO</span>Documentos</a></li>
+        <li><a class="nav-link" data-page="oportunidades" href="oportunidades.html"><span class="nav-icon">OP</span>Oportunidades</a></li>
+        <li><a class="nav-link" data-page="foro" href="foro.html"><span class="nav-icon">FO</span>Foro</a></li>
+        <li><a class="nav-link" data-page="analytics" href="analytics.html"><span class="nav-icon">AN</span>Analitica</a></li>
+      </ul></nav>
+      <section class="user-card"><strong data-user-name></strong><span data-user-role></span><button class="ghost" type="button" onclick="logout()">Cerrar sesion</button></section>
+    </aside>
+    <main class="main">
+      <header class="topbar forum-topbar">
+        <div class="forum-topbar-title">
+          <h1>Foro de la comunidad</h1>
+          <p class="muted">Creador ONG y Voluntario comparten experiencias. El Administrador solo modera: fija, cierra o elimina temas.</p>
+        </div>
+        <button class="button forum-new-btn" type="button" data-forum-new-topic onclick="window.KMS.openForumTopicForm()">
+          <span class="forum-icon" data-icon="plus"></span>Nuevo tema
+        </button>
+      </header>
+      <section class="content">
+        <div class="forum-boards" id="forumBoards" role="tablist" aria-label="Tableros del foro">
+          <button type="button" class="forum-board-card forum-board-good" data-forum-board-tab="buenas_practicas">
+            <span class="forum-board-icon" data-icon="bulb"></span>
+            <span class="forum-board-copy">
+              <strong>Buenas practicas</strong>
+              <span class="muted">Lo que le funciono a tu ONG</span>
+            </span>
+            <span class="forum-board-count" data-forum-count="buenas_practicas">0</span>
+          </button>
+          <button type="button" class="forum-board-card forum-board-bad" data-forum-board-tab="malas_practicas">
+            <span class="forum-board-icon" data-icon="warning"></span>
+            <span class="forum-board-copy">
+              <strong>Malas practicas</strong>
+              <span class="muted">Errores para no repetir</span>
+            </span>
+            <span class="forum-board-count" data-forum-count="malas_practicas">0</span>
+          </button>
+        </div>
+        <div class="forum-feed" id="forumTopics"></div>
+      </section>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/laws-data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/forum.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', window.KMS.initForumTabs);</script>
+</body>
+</html>

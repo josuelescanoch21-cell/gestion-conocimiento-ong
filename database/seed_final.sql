@@ -264,3 +264,27 @@ left join subcategories sc on sc.category_id = c.id and sc.name = x.subcategory
 join organizations o on o.name = x.organization
 join users u on u.full_name = x.author_name
 where not exists (select 1 from knowledge_items k where lower(k.title) = lower(x.title));
+
+-- cambio para el foro: contenido de ejemplo para el foro de buenas y malas practicas.
+insert into forum_topics (board, title, content, organization_id, created_by, author_name, status, is_pinned)
+select x.board, x.title, x.content, o.id, u.id, x.author_name, 'abierto', x.is_pinned
+from (values
+  ('buenas_practicas', 'Como organizamos la induccion de nuevos voluntarios', 'Compartimos la checklist que usamos antes de la primera actividad: bienvenida, firma de compromiso, contacto de emergencia y asignacion de un mentor. Nos bajo bastante la desercion en el primer mes.', 'Manos Abiertas', 'Carlos Creador ONG', true),
+  ('buenas_practicas', 'Plantilla simple para rendir cuentas a donantes', 'Usamos una plantilla de una sola pagina con monto recibido, uso de fondos y evidencia fotografica. Los donantes valoran mucho la brevedad y la evidencia visual.', 'Puentes de Impacto', 'Ana Administradora', false),
+  ('malas_practicas', 'Error comun: pedir demasiados datos personales de entrada', 'En una campana pedimos DNI y direccion exacta desde el primer formulario, antes de explicar el uso de esos datos. Generamos desconfianza y varias personas no continuaron el proceso.', 'Manos Abiertas', 'Valeria Voluntaria', false),
+  ('malas_practicas', 'No avisar cambios de horario con anticipacion', 'Cambiamos el horario de una capacitacion con un dia de aviso y varios voluntarios no pudieron reorganizarse. Ahora avisamos con minimo una semana de anticipacion.', 'Puentes de Impacto', 'Valeria Voluntaria', false)
+) as x(board, title, content, organization, author_name, is_pinned)
+join organizations o on o.name = x.organization
+join users u on u.full_name = x.author_name
+where not exists (select 1 from forum_topics ft where ft.title = x.title);
+
+insert into forum_replies (topic_id, content, organization_id, created_by, author_name)
+select ft.id, x.content, o.id, u.id, x.author_name
+from (values
+  ('Como organizamos la induccion de nuevos voluntarios', 'Nosotros sumamos tambien un video corto de bienvenida, ayuda mucho antes de la charla en vivo.', 'Puentes de Impacto', 'Valeria Voluntaria'),
+  ('Error comun: pedir demasiados datos personales de entrada', 'Totalmente de acuerdo, nosotros movimos el DNI al formulario de aceptacion final y mejoro bastante la respuesta.', 'Manos Abiertas', 'Carlos Creador ONG')
+) as x(topic_title, content, organization, author_name)
+join forum_topics ft on ft.title = x.topic_title
+join organizations o on o.name = x.organization
+join users u on u.full_name = x.author_name
+where not exists (select 1 from forum_replies fr where fr.topic_id = ft.id and fr.content = x.content);

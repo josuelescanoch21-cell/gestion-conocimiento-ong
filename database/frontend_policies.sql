@@ -86,3 +86,32 @@ create policy "frontend read audit" on audit_logs for select to anon using (true
 
 drop policy if exists "frontend write audit" on audit_logs;
 create policy "frontend write audit" on audit_logs for insert to anon with check (true);
+
+-- cambio para el foro: politicas abiertas para el modo demo (sin backend), igual al resto de
+-- tablas de este archivo. Como el proyecto no usa una sesion real de Supabase Auth (el rol
+-- viene de localStorage, ver public/js/auth.js), aca solo se habilita el acceso con la
+-- Publishable Key. Las reglas por rol (quien crea temas, quien modera, etc.) se validan
+-- en public/js/forum.js y en la funcion api() de public/js/app.js.
+alter table forum_topics enable row level security;
+alter table forum_replies enable row level security;
+
+drop policy if exists "frontend read forum_topics" on forum_topics;
+create policy "frontend read forum_topics" on forum_topics for select to anon using (true);
+
+drop policy if exists "frontend write forum_topics" on forum_topics;
+create policy "frontend write forum_topics" on forum_topics for all to anon using (true) with check (true);
+
+drop policy if exists "frontend read forum_replies" on forum_replies;
+create policy "frontend read forum_replies" on forum_replies for select to anon using (true);
+
+drop policy if exists "frontend write forum_replies" on forum_replies;
+create policy "frontend write forum_replies" on forum_replies for all to anon using (true) with check (true);
+
+-- cambio para el foro (rediseno): politicas abiertas de modo demo para reacciones.
+alter table forum_reactions enable row level security;
+
+drop policy if exists "frontend read forum_reactions" on forum_reactions;
+create policy "frontend read forum_reactions" on forum_reactions for select to anon using (true);
+
+drop policy if exists "frontend write forum_reactions" on forum_reactions;
+create policy "frontend write forum_reactions" on forum_reactions for all to anon using (true) with check (true);

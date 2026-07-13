@@ -16,6 +16,7 @@
         <li><a class="nav-link" data-page="leyes" href="leyes.html"><span class="nav-icon">LY</span>Leyes ONG</a></li>
         <li><a class="nav-link" data-page="documentos" href="documentos.html"><span class="nav-icon">DO</span>Documentos</a></li>
         <li><a class="nav-link" data-page="oportunidades" href="oportunidades.html"><span class="nav-icon">OP</span>Oportunidades</a></li>
+        <li><a class="nav-link" data-page="foro" href="foro.html"><span class="nav-icon">FO</span>Foro</a></li>
         <li><a class="nav-link" data-page="analytics" href="analytics.html"><span class="nav-icon">AN</span>Analitica</a></li>
       </ul></nav>
       <section class="user-card"><strong data-user-name></strong><span data-user-role></span><button class="ghost" type="button" onclick="logout()">Cerrar sesion</button></section>
@@ -41,9 +42,19 @@
           <div class="law-results-bar"><strong id="lawResultCount">Mostrando normas</strong><div id="lawActiveFilters" class="active-filters"></div></div>
           <div><span class="filter-label">Filtrar por etiquetas</span><div id="lawTagFilters" class="tag-filters"></div></div>
         </section>
-        <section class="split">
+        <section class="split split-3">
           <aside class="panel knowledge-tree"><h2>Secuencia legal</h2><div id="lawsTree"></div></aside>
           <div class="grid cols-2" id="lawItems"></div>
+          <!-- cambio para el chat IA: panel fijo de chat con IA (Gemini), al costado de los resultados -->
+          <aside class="panel ai-chat-panel" id="aiChatPanel">
+            <h2>Asistente legal IA</h2>
+            <p class="muted">Pregunta sobre los tramites y leyes que ves aqui. Es informativo y no reemplaza asesoria legal profesional.</p>
+            <div class="chat-messages" id="aiChatMessages"></div>
+            <form id="aiChatForm" class="chat-form">
+              <input id="aiChatInput" type="text" placeholder="Ej: Que necesito para inscribir mi ONG en SUNARP?" required maxlength="500">
+              <button type="submit">Enviar</button>
+            </form>
+          </aside>
         </section>
       </section>
     </main>
@@ -53,9 +64,12 @@
   <script src="js/laws-data.js"></script>
   <script src="js/app.js"></script>
   <script src="js/auth.js"></script>
+  <!-- cambio para el chat IA: modulo del asistente legal -->
+  <script src="js/legal-chat.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       window.KMS.renderLaws();
+      window.KMS.initLegalChat();
       ['lawSearch','lawSubcategoryFilter','lawRoleFilter'].forEach((id) => {
         const node = document.getElementById(id);
         if (node) node.addEventListener('input', window.KMS.renderLaws);

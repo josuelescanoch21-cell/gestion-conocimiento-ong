@@ -21,7 +21,8 @@ GC/
 │   │   ├── auth.js
 │   │   ├── analytics.js
 │   │   ├── audit.js
-│   │   └── search.js
+│   │   ├── search.js
+│   │   └── forum.js
 │   ├── index.html
 │   ├── login.html
 │   ├── dashboard.html
@@ -30,11 +31,13 @@ GC/
 │   ├── oportunidades.html
 │   ├── conocimiento.html
 │   ├── analytics.html
-│   └── leyes.html
+│   ├── leyes.html
+│   └── foro.html
 ├── database/
 │   ├── schema.sql
 │   ├── seed_final.sql
-│   └── frontend_policies.sql
+│   ├── frontend_policies.sql
+│   └── migration_legal_taxonomy.sql
 ├── package.json
 ├── package-lock.json
 ├── static-server.js
@@ -81,7 +84,9 @@ No colocar aquí la Secret Key ni Service Role Key.
 
 ## Despliegue en Railway
 
-Railway solo servirá archivos estáticos. No se usa backend Express ni rutas reales `/api`.
+Railway sirve los archivos estáticos del frontend. La única ruta de backend real es
+`POST /api/ai/legal-chat` (ver sección "Asistente legal con IA" más abajo); todo lo demás
+sigue siendo Supabase directo desde el navegador, sin backend Express ni más rutas `/api`.
 
 Comando de inicio:
 
@@ -94,6 +99,46 @@ El archivo que levanta el sitio es:
 ```txt
 static-server.js
 ```
+
+## Asistente legal con IA (cambio para el chat IA)
+
+Panel de chat fijo dentro de **Leyes ONG**, al costado de los filtros/resultados. Responde
+preguntas basándose únicamente en las leyes visibles/filtradas en esa página (no inventa
+normas), usando el modelo gratuito **Gemini 2.5 Flash** de Google.
+
+- **Quién lo ve**: solo `creador_ong` y `voluntario`. El administrador no participa (mismo
+  criterio que en el Foro: modera, no conversa).
+- **Dónde vive la lógica**: `public/js/legal-chat.js` (frontend) y `static-server.js`
+  (backend mínimo que llama a Gemini sin exponer la key al navegador).
+- **No se guarda nada**: las preguntas y respuestas no se persisten en Supabase ni en logs;
+  cada consulta es efímera.
+- **Variable de entorno requerida**: `GEMINI_API_KEY`.
+  1. Crea una key gratis (sin tarjeta) en <https://aistudio.google.com/apikey>.
+  2. En Railway: pestaña **Variables** del servicio → agrega `GEMINI_API_KEY` con tu key.
+  3. En local: expórtala antes de correr `npm start`, por ejemplo
+     `GEMINI_API_KEY=tu_key npm start` (no la subas al repositorio).
+  - Variable opcional `GEMINI_MODEL` si más adelante quieres cambiar de modelo
+    (por defecto usa `gemini-3.1-flash-lite`, GA y gratuito; evita `gemini-2.5-flash`,
+    que desde el 9 de julio de 2026 devuelve error 404 en proyectos/keys nuevos aunque
+    su retiro oficial es recién en octubre — bug reportado en el foro de Google).
+- **Límite de uso**: el servidor limita a 8 preguntas por minuto por IP para no agotar la
+  cuota gratuita compartida de Gemini.
+- **Si se agota la cuota gratuita** (Gemini responde 429): la cuota es del proyecto/key, no
+  por persona, así que se comparte entre todos los que usan la app. Cuando se agota, el chat
+  muestra un aviso claro en español en vez del error técnico de Google, y sugiere reintentar
+  más tarde (el límite diario resetea a medianoche hora de Los Ángeles). Si necesitas más
+  cupo de forma permanente, en Google AI Studio puedes activar facturación (pago por uso,
+  muy barato) sin cambiar nada del código.
+
+## Foro de la comunidad
+
+Nueva seccion `foro.html` con dos tableros: **Buenas practicas** y **Malas practicas**.
+
+- Creador ONG y Voluntario pueden crear temas y responder.
+- Administrador solo modera: fijar/desfijar, cerrar/reabrir y eliminar (soft-delete) temas y respuestas. No crea temas ni responde.
+- Tablas: `forum_topics` y `forum_replies` (ver `database/schema.sql`, seccion "Iteracion 8 - Foro de la comunidad").
+- Politicas para el modo demo (Publishable Key, sin login real) en `database/frontend_policies.sql`.
+- Logica de UI y llamadas a Supabase en `public/js/forum.js`, ademas de las rutas `/api/forum/...` agregadas a la funcion `api()` de `public/js/app.js`.
 
 ## Credenciales demo
 
