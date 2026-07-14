@@ -5,30 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dashboard | Gestion de Conocimiento ONG</title>
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/dashboard-theme.css">
 </head>
 <body>
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
   <div class="app-shell">
     <aside class="sidebar" aria-label="Navegacion principal">
-      <a class="brand" href="dashboard.html">
-        <span class="brand-mark">GC</span>
-        <div><strong>ONG KMS</strong><span>Base de conocimiento</span></div>
+      <a class="brand" href="dashboard.html" aria-label="Ir al inicio">
+        <span class="brand-word">ONG<span>.</span></span>
+        <small>Gestión del Conocimiento</small>
       </a>
-      <nav>
+      <nav aria-label="Secciones del sistema">
         <ul class="nav-list">
-          <li><a class="nav-link" data-page="dashboard" href="dashboard.html"><span class="nav-icon">IN</span>Inicio</a></li>
-          <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html"><span class="nav-icon">KC</span>Conocimiento</a></li>
-        <li><a class="nav-link" data-page="leyes" href="leyes.html"><span class="nav-icon">LY</span>Leyes ONG</a></li>
-          <li><a class="nav-link" data-page="documentos" href="documentos.html"><span class="nav-icon">DO</span>Documentos</a></li>
-          <li><a class="nav-link" data-page="oportunidades" href="oportunidades.html"><span class="nav-icon">OP</span>Oportunidades</a></li>
-          <li><a class="nav-link" data-page="foro" href="foro.html"><span class="nav-icon">FO</span>Foro</a></li>
-          <li><a class="nav-link" data-page="analytics" href="analytics.html"><span class="nav-icon">AN</span>Analitica</a></li>
+          <li><a class="nav-link" data-page="dashboard" href="dashboard.html"><span class="nav-icon">⌂</span>Inicio</a></li>
+          <li><a class="nav-link" data-page="oportunidades" href="oportunidades.html"><span class="nav-icon">☷</span>Voluntariados</a></li>
+          <li data-role-only="administrador,creador_ong"><a class="nav-link" data-page="oportunidades" href="oportunidades.html?crear=1"><span class="nav-icon">＋</span>Publicar voluntariado</a></li>
+          <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html"><span class="nav-icon">A</span>Conocimiento</a></li>
+          <li><a class="nav-link" data-page="leyes" href="leyes.html"><span class="nav-icon">§</span>Leyes</a></li>
+          <li><a class="nav-link" data-page="analytics" href="analytics.html"><span class="nav-icon">⌁</span>Reviews</a></li>
+          <li><a class="nav-link" data-page="documentos" href="documentos.html"><span class="nav-icon">□</span>Mis documentos</a></li>
+          <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html"><span class="nav-icon">◎</span>Usuarios</a></li>
+          <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html#permisos"><span class="nav-icon">⌕</span>Permisos</a></li>
+          <li><a class="nav-link" data-page="foro" href="foro.html"><span class="nav-icon">▤</span>Foro</a></li>
+          <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html#chat-conocimiento"><span class="nav-icon">▣</span>Chat IA</a></li>
         </ul>
       </nav>
+      <section class="sidebar-help" aria-label="Acceso rapido">
+        <strong>Comparte conocimiento</strong>
+        <span>Ayuda a tu ONG a documentar y aprender.</span>
+        <a class="sidebar-help-button" href="conocimiento.html">Explorar</a>
+      </section>
       <section class="user-card">
-        <strong data-user-name></strong>
-        <span data-user-role></span>
-        <button class="ghost" type="button" onclick="logout()">Cerrar sesion</button>
+        <span class="user-avatar" aria-hidden="true">U</span>
+        <div><strong data-user-name></strong><span data-user-role></span></div>
+        <button class="ghost" type="button" onclick="logout()" title="Cerrar sesión">↪</button>
       </section>
     </aside>
     <main class="main" id="contenido">
@@ -39,30 +49,52 @@
         </div>
         <button class="button" type="button" data-role-only="administrador,creador_ong" onclick="window.KMS.openArticleForm()">Nuevo contenido</button>
       </header>
-      <section class="content">
-        <div class="page-header">
-          <div>
-            <h1>Centro de Conocimiento ONG</h1>
-            <p>Arquitectura tipo wiki para capturar, recuperar y mejorar conocimiento operativo, social y documental.</p>
-          </div>
+      <section class="content dashboard-content">
+        <div class="page-header dashboard-heading">
+          <div><h1>Panel general</h1><p>Bienvenido. Consulta la actividad y el conocimiento compartido de tu organización.</p></div>
+          <button class="period-filter" type="button" aria-label="Periodo del reporte"><span>▣</span><span><small>Periodo</small>Últimos 30 días</span><b>⌄</b></button>
         </div>
-        <section class="grid cols-4" aria-label="Indicadores principales">
-          <article class="card stat"><span class="muted">Documentos visibles</span><strong id="statDocs">0</strong></article>
-          <article class="card stat"><span class="muted">Categorias</span><strong id="statCategories">0</strong></article>
-          <article class="card stat"><span class="muted">Busquedas sin resultado</span><strong id="statSearches">0</strong></article>
-          <article class="card stat"><span class="muted">Oportunidades activas</span><strong id="statOpportunities">0</strong></article>
+
+        <section class="dashboard-stats" aria-label="Indicadores principales">
+          <article class="metric-card"><span class="metric-icon mint">▤</span><div><strong id="statDocs">0</strong><small>Documentos visibles</small><em>Contenido disponible</em></div></article>
+          <article class="metric-card"><span class="metric-icon aqua">◇</span><div><strong id="statCategories">0</strong><small>Categorías activas</small><em>Taxonomía organizada</em></div></article>
+          <article class="metric-card"><span class="metric-icon rose">⌕</span><div><strong id="statSearches">0</strong><small>Búsquedas sin resultado</small><em>Oportunidades de mejora</em></div></article>
+          <article class="metric-card"><span class="metric-icon green">♧</span><div><strong id="statOpportunities">0</strong><small>Voluntariados activos</small><em>Convocatorias disponibles</em></div></article>
         </section>
-        <section class="panel" data-role-only="administrador,creador_ong">
-          <h2>Resumen operativo real</h2>
-          <p class="muted">Indicadores obtenidos directamente desde Supabase segun el rol actual.</p>
-          <div class="mini-list analytics-summary" id="dashboardAnalytics"></div>
+
+        <section class="dashboard-grid dashboard-grid-top">
+          <article class="panel visual-panel">
+            <div class="panel-heading"><div><h2>Distribución del conocimiento</h2><p>Estado general de la información</p></div><button class="icon-button" type="button" aria-label="Más opciones">⋮</button></div>
+            <div class="donut-row">
+              <div class="donut-block"><div class="donut donut-a"><span>81%</span></div><small>Publicaciones</small></div>
+              <div class="donut-block"><div class="donut donut-b"><span>64%</span></div><small>Participación</small></div>
+              <div class="donut-block"><div class="donut donut-c"><span>72%</span></div><small>Documentación</small></div>
+            </div>
+          </article>
+          <article class="panel visual-panel activity-panel">
+            <div class="panel-heading"><div><h2>Actividad de la plataforma</h2><p>Interacciones registradas durante la semana</p></div><a class="report-link" href="analytics.html">Ver reporte</a></div>
+            <div class="line-chart" aria-label="Gráfico decorativo de actividad">
+              <svg viewBox="0 0 640 190" role="img"><defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#28a8e9" stop-opacity=".28"/><stop offset="1" stop-color="#28a8e9" stop-opacity="0"/></linearGradient></defs><path class="chart-area" d="M10 155 C60 130 70 70 115 100 S170 110 200 55 S260 120 300 105 S360 70 395 120 S445 75 480 110 S535 35 575 70 S615 45 630 55 L630 180 L10 180 Z"/><path class="chart-line" d="M10 155 C60 130 70 70 115 100 S170 110 200 55 S260 120 300 105 S360 70 395 120 S445 75 480 110 S535 35 575 70 S615 45 630 55"/><circle cx="300" cy="105" r="7"/></svg>
+              <div class="chart-labels"><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span></div>
+            </div>
+          </article>
         </section>
-        <section class="panel">
-          <div class="section-title-row">
-            <div><h2>Actualizaciones recientes</h2><p class="muted">Inicio queda como resumen; la taxonomia completa esta en Conocimiento y Leyes ONG.</p></div>
-            <a class="button secondary" href="conocimiento.html">Ir a conocimiento</a>
-          </div>
-          <div class="grid cols-3" id="recentItems" data-search-results></div>
+
+        <section class="dashboard-grid dashboard-grid-middle">
+          <article class="panel visual-panel revenue-panel">
+            <div class="panel-heading"><div><h2>Evolución del conocimiento</h2><p>Creación y consulta de contenidos</p></div><div class="chart-legend"><span><i></i>Publicaciones</span><span><i></i>Consultas</span></div></div>
+            <div class="trend-chart"><svg viewBox="0 0 760 245" role="img"><g class="grid-lines"><line x1="30" y1="35" x2="735" y2="35"/><line x1="30" y1="85" x2="735" y2="85"/><line x1="30" y1="135" x2="735" y2="135"/><line x1="30" y1="185" x2="735" y2="185"/></g><path class="trend-one" d="M40 180 C90 80 125 185 175 140 S245 35 295 85 S365 170 420 130 S500 95 550 135 S640 75 720 100"/><path class="trend-two" d="M40 120 C95 40 120 175 180 110 S255 165 315 75 S405 50 455 115 S535 180 590 110 S650 65 720 145"/></svg><div class="chart-labels months"><span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span><span>May</span><span>Jun</span><span>Jul</span><span>Ago</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dic</span></div></div>
+          </article>
+          <article class="panel visual-panel compact-analytics" data-role-only="administrador,creador_ong">
+            <div class="panel-heading"><div><h2>Resumen operativo</h2><p>Datos reales según tu rol</p></div></div>
+            <div class="mini-list analytics-summary" id="dashboardAnalytics"></div>
+            <div class="bar-decoration"><i style="--h:58%"></i><i style="--h:82%"></i><i style="--h:42%"></i><i style="--h:70%"></i><i style="--h:54%"></i><i style="--h:76%"></i></div>
+          </article>
+        </section>
+
+        <section class="recent-section">
+          <div class="section-title-row"><div><h2>Actualizaciones recientes</h2><p class="muted">Contenido nuevo y recursos destacados para tu organización.</p></div><a class="button secondary" href="conocimiento.html">Ver todo</a></div>
+          <div class="grid cols-3 dashboard-recent" id="recentItems" data-search-results></div>
         </section>
       </section>
     </main>
@@ -74,5 +106,6 @@
   <script src="js/auth.js"></script>
   <script src="js/search.js"></script>
   <script>document.addEventListener('DOMContentLoaded', window.KMS.renderDashboard);</script>
+  <script src="js/ui-shell.js"></script>
 </body>
 </html>

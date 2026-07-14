@@ -5,21 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Documentos | Gestion de Conocimiento ONG</title>
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/dashboard-theme.css">
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar">
-      <a class="brand" href="dashboard.html"><span class="brand-mark">GC</span><div><strong>ONG KMS</strong><span>Gestion documental</span></div></a>
-      <nav><ul class="nav-list">
-        <li><a class="nav-link" data-page="dashboard" href="dashboard.html"><span class="nav-icon">IN</span>Inicio</a></li>
-        <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html"><span class="nav-icon">KC</span>Conocimiento</a></li>
-        <li><a class="nav-link" data-page="leyes" href="leyes.html"><span class="nav-icon">LY</span>Leyes ONG</a></li>
-        <li><a class="nav-link" data-page="documentos" href="documentos.html"><span class="nav-icon">DO</span>Documentos</a></li>
-        <li><a class="nav-link" data-page="oportunidades" href="oportunidades.html"><span class="nav-icon">OP</span>Oportunidades</a></li>
-        <li><a class="nav-link" data-page="foro" href="foro.html"><span class="nav-icon">FO</span>Foro</a></li>
-        <li><a class="nav-link" data-page="analytics" href="analytics.html"><span class="nav-icon">AN</span>Analitica</a></li>
-      </ul></nav>
-      <section class="user-card"><strong data-user-name></strong><span data-user-role></span><button class="ghost" type="button" onclick="logout()">Cerrar sesion</button></section>
+    <aside class="sidebar" aria-label="Navegacion principal">
+      <a class="brand" href="dashboard.html" aria-label="Ir al inicio">
+        <span class="brand-word">ONG<span>.</span></span>
+        <small>Gestión del Conocimiento</small>
+      </a>
+      <nav aria-label="Secciones del sistema">
+        <ul class="nav-list">
+          <li><a class="nav-link" data-page="dashboard" href="dashboard.html"><span class="nav-icon">⌂</span>Inicio</a></li>
+          <li><a class="nav-link" data-page="oportunidades" href="oportunidades.html"><span class="nav-icon">☷</span>Voluntariados</a></li>
+          <li data-role-only="administrador,creador_ong"><a class="nav-link" data-page="oportunidades" href="oportunidades.html?crear=1"><span class="nav-icon">＋</span>Publicar voluntariado</a></li>
+          <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html"><span class="nav-icon">A</span>Conocimiento</a></li>
+          <li><a class="nav-link" data-page="leyes" href="leyes.html"><span class="nav-icon">§</span>Leyes</a></li>
+          <li><a class="nav-link" data-page="analytics" href="analytics.html"><span class="nav-icon">⌁</span>Reviews</a></li>
+          <li><a class="nav-link" data-page="documentos" href="documentos.html"><span class="nav-icon">□</span>Mis documentos</a></li>
+          <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html"><span class="nav-icon">◎</span>Usuarios</a></li>
+          <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html#permisos"><span class="nav-icon">⌕</span>Permisos</a></li>
+          <li><a class="nav-link" data-page="foro" href="foro.html"><span class="nav-icon">▤</span>Foro</a></li>
+          <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html#chat-conocimiento"><span class="nav-icon">▣</span>Chat IA</a></li>
+        </ul>
+      </nav>
+      <section class="sidebar-help" aria-label="Acceso rapido">
+        <strong>Comparte conocimiento</strong>
+        <span>Ayuda a tu ONG a documentar y aprender.</span>
+        <a class="sidebar-help-button" href="conocimiento.html">Explorar</a>
+      </section>
+      <section class="user-card">
+        <span class="user-avatar" aria-hidden="true">U</span>
+        <div><strong data-user-name></strong><span data-user-role></span></div>
+        <button class="ghost" type="button" onclick="logout()" title="Cerrar sesión">↪</button>
+      </section>
     </aside>
     <main class="main">
       <header class="topbar"><div class="search-box"><input data-search-input type="search" placeholder="Buscar documentos"><div class="suggestions" data-suggestions></div></div><button type="button" onclick="window.KMS.openDocumentForm()">Subir documento</button></header>
@@ -41,5 +60,6 @@
   <script src="js/auth.js"></script>
   <script src="js/search.js"></script>
   <script>document.addEventListener('DOMContentLoaded', window.KMS.renderDocuments);</script>
+  <script src="js/ui-shell.js"></script>
 </body>
 </html>
