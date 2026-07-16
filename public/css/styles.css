@@ -706,6 +706,7 @@ th {
 
 /* cambio para el chat IA: tercera columna fija para el panel de chat en Leyes ONG */
 .split-3 { grid-template-columns: 260px minmax(0, 1fr) 300px; }
+.split-2 { grid-template-columns: 260px minmax(0, 1fr); }
 .ai-chat-panel { display: flex; flex-direction: column; max-height: calc(100vh - 180px); }
 .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 8px 0; min-height: 120px; }
 .chat-bubble { padding: 8px 12px; border-radius: 14px; max-width: 92%; font-size: .9rem; line-height: 1.45; }
@@ -843,8 +844,28 @@ th {
 .forum-detail-footer { padding: 4px 0 0; }
 .forum-replies-title { display: flex; align-items: center; gap: 8px; margin-top: 20px; }
 .forum-reply-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.forum-reply { border-left: 3px solid var(--brand); }
 .forum-reply-form textarea { min-height: 80px; }
+
+/* Mejora visual del hilo de respuestas: layout en columna (no fila) para que la respuesta se
+   lea como un mensaje de conversacion, con una linea de tiempo a la izquierda que conecta los
+   mensajes entre si. No cambia la logica ni las categorias del foro, solo la presentacion. */
+#forumRepliesList.mini-list { position: relative; gap: 0; margin-top: 14px; padding-left: 22px; }
+#forumRepliesList.mini-list::before {
+  content: ""; position: absolute; left: 9px; top: 6px; bottom: 6px; width: 2px;
+  background: var(--line);
+}
+.forum-reply {
+  display: block; flex-direction: unset; align-items: unset; justify-content: unset;
+  position: relative; border: 1px solid var(--line); border-left: none;
+  border-radius: 14px; margin-bottom: 10px; background: var(--surface, #fff);
+}
+.forum-reply::before {
+  content: ""; position: absolute; left: -22px; top: 18px; width: 9px; height: 9px;
+  border-radius: 50%; background: var(--brand); border: 2px solid var(--surface, #fff);
+  box-shadow: 0 0 0 2px var(--line);
+}
+.forum-reply p { white-space: pre-wrap; }
+.forum-reply:last-child { margin-bottom: 0; }
 .forum-closed-note { display: flex; align-items: center; gap: 6px; }
 
 [data-forum-new-topic][hidden] { display: none; }
@@ -856,6 +877,7 @@ th {
 
 @media (max-width: 980px) {
   .split-3 { grid-template-columns: 1fr; }   /* apila: árbol, resultados, chat */
+  .split-2 { grid-template-columns: 1fr; }   /* apila: árbol, resultados */
   .ai-chat-panel { order: 3; max-height: none; }
   .knowledge-tree { max-height: 260px; }      /* el árbol ya no ocupa toda la pantalla */
 }
@@ -864,4 +886,49 @@ th {
   .ai-chat-panel { padding: 14px; }
   .chat-messages { max-height: 280px; min-height: 140px; }
   .chat-bubble { max-width: 100%; }
+}
+/* Mejora simple de Conocimiento, Leyes, Reviews y Foro sin cambiar su lógica */
+.eyebrow { display:block; margin-bottom:4px; color:var(--brand); font-size:.76rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+.section-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+.section-heading h2, .results-heading h2 { margin:0; }
+.filter-hint { color:var(--muted); font-size:.78rem; }
+.knowledge-layout { align-items:start; }
+.knowledge-sidebar { display:grid; gap:14px; position:sticky; top:18px; max-height:calc(100vh - 36px); overflow:auto; padding-right:3px; }
+.filter-panel { display:grid; gap:14px; }
+.filters-column { align-items:stretch; flex-direction:column; }
+.filters-column label { display:grid; gap:6px; width:100%; color:var(--ink); font-size:.82rem; font-weight:700; }
+.filters-column select, .filters-column input { width:100%; }
+.results-count { margin:0; padding-top:4px; border-top:1px solid var(--line); }
+.side-copy { margin:5px 0 10px; font-size:.84rem; }
+.knowledge-results { min-width:0; }
+.results-heading { margin:0 0 12px; padding:2px 2px 10px; border-bottom:1px solid var(--line); }
+.knowledge-tree { max-height:none; overflow:visible; }
+
+.reviews-page { display:grid; gap:18px; }
+.reviews-header { margin-bottom:0; }
+.reviews-guide { display:flex; align-items:center; justify-content:space-between; gap:20px; border-left:4px solid var(--brand); }
+.reviews-guide p { margin:5px 0 0; }
+.reviews-section-title { margin-top:4px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+.reviews-grid { gap:14px; }
+.review-card { display:grid; align-content:start; gap:5px; min-height:220px; }
+.review-card > p { margin:0 0 8px; }
+.review-card .chart { margin-top:4px; }
+.review-audit { margin-top:2px; }
+
+.forum-page { display:grid; gap:16px; }
+.forum-welcome { display:flex; align-items:center; justify-content:space-between; gap:20px; border-left:4px solid var(--brand); }
+.forum-welcome h2, .forum-welcome p { margin:0; }
+.forum-welcome p { margin-top:6px; }
+.forum-steps { display:flex; gap:8px; flex-wrap:wrap; }
+.forum-steps span { padding:7px 10px; border:1px solid var(--line); border-radius:999px; background:var(--surface-soft); color:var(--brand-dark); font-size:.8rem; font-weight:700; }
+.forum-section-heading { margin-top:2px; }
+.forum-page .forum-boards { margin-bottom:0; }
+
+@media (max-width:980px) {
+  .knowledge-sidebar { position:static; max-height:none; overflow:visible; }
+  .knowledge-tree { max-height:260px; overflow:auto; }
+}
+@media (max-width:700px) {
+  .reviews-guide, .forum-welcome { align-items:flex-start; flex-direction:column; }
+  .forum-steps { width:100%; }
 }

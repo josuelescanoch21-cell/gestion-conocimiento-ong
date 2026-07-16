@@ -26,7 +26,7 @@
           <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html"><span class="nav-icon">◎</span>Usuarios</a></li>
           <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html#permisos"><span class="nav-icon">⌕</span>Permisos</a></li>
           <li><a class="nav-link" data-page="foro" href="foro.html"><span class="nav-icon">▤</span>Foro</a></li>
-          <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html#chat-conocimiento"><span class="nav-icon">▣</span>Chat IA</a></li>
+          <li><a class="nav-link" href="#" onclick="window.KMS.openAiChat(); return false;"><span class="nav-icon">▣</span>Chat IA</a></li>
         </ul>
       </nav>
       <section class="sidebar-help" aria-label="Acceso rapido">
@@ -52,29 +52,27 @@
         <section class="panel legal-note">
           <strong>Nota importante:</strong> esta seccion es informativa y debe verificarse con fuentes oficiales o asesoria legal antes de usarla como politica institucional.
         </section>
-        <section class="panel">
-          <div class="filters">
-            <select id="lawSubcategoryFilter" aria-label="Filtrar por categoría legal"><option value="">Todas las categorías legales</option></select>
-            <select id="lawRoleFilter" aria-label="Filtrar por rol permitido"><option value="">Cualquier rol</option><option value="administrador">Administrador</option><option value="creador_ong">Creador ONG</option><option value="voluntario">Voluntario</option></select>
-            <select data-filter-type aria-label="Filtrar por tipo"><option value="ley">Ley / normativa ONG</option></select>
-          </div>
-          <div class="law-results-bar"><strong id="lawResultCount">Mostrando normas</strong><div id="lawActiveFilters" class="active-filters"></div></div>
-          <div><span class="filter-label">Filtrar por etiquetas</span><div id="lawTagFilters" class="tag-filters"></div></div>
-        </section>
-        <section class="split split-3">
-          <aside class="panel knowledge-tree"><h2>Secuencia legal</h2><div id="lawsTree"></div></aside>
-          <div class="grid cols-2" id="lawItems"></div>
-          <!-- cambio para el chat IA: panel fijo de chat con IA (Gemini), al costado de los resultados -->
-          <aside class="panel ai-chat-panel" id="aiChatPanel">
-            <h2>Asistente legal IA</h2>
-            <p class="muted">Pregunta sobre los tramites y leyes que ves aqui. Es informativo y no reemplaza asesoria legal profesional.</p>
-            <div class="chat-messages" id="aiChatMessages"></div>
-            <form id="aiChatForm" class="chat-form">
-              <input id="aiChatInput" type="text" placeholder="Ej: Que necesito para inscribir mi ONG en SUNARP?" required maxlength="500">
-              <button type="submit">Enviar</button>
-            </form>
+        <section class="split split-2 knowledge-layout">
+          <aside class="knowledge-sidebar">
+            <section class="panel filter-panel">
+              <div class="section-heading"><div><span class="eyebrow">Consulta legal</span><h2>Filtros</h2></div><span class="filter-hint">Búsqueda simple</span></div>
+              <div class="filters filters-column">
+                <label>Categoría legal<select id="lawSubcategoryFilter" aria-label="Filtrar por categoría legal"><option value="">Todas las categorías legales</option></select></label>
+                <label>Visible para<select id="lawRoleFilter" aria-label="Filtrar por rol permitido"><option value="">Cualquier rol</option><option value="administrador">Administrador</option><option value="creador_ong">Creador ONG</option><option value="voluntario">Voluntario</option></select></label>
+                <label>Tipo<select data-filter-type aria-label="Filtrar por tipo"><option value="ley">Ley / normativa ONG</option></select></label>
+              </div>
+              <div class="law-results-bar"><strong id="lawResultCount">Mostrando normas</strong><div id="lawActiveFilters" class="active-filters"></div></div>
+              <div><span class="filter-label">Etiquetas</span><div id="lawTagFilters" class="tag-filters"></div></div>
+            </section>
+            <section class="panel knowledge-tree"><h2>Secuencia legal</h2><p class="muted side-copy">Sigue la ruta de constitución y gestión de una ONG.</p><div id="lawsTree"></div></section>
           </aside>
+          <div class="knowledge-results">
+            <div class="results-heading"><div><span class="eyebrow">Normativa</span><h2>Leyes y procedimientos</h2></div></div>
+            <div class="grid cols-2" id="lawItems"></div>
+          </div>
         </section>
+        <!-- cambio para la burbuja global: el chat IA ya no es un panel fijo de esta pagina;
+             ahora es una burbuja flotante disponible en todo el sistema (ver ai-chat-widget.js). -->
       </section>
     </main>
   </div>
@@ -83,12 +81,11 @@
   <script src="js/laws-data.js"></script>
   <script src="js/app.js"></script>
   <script src="js/auth.js"></script>
-  <!-- cambio para el chat IA: modulo del asistente legal -->
-  <script src="js/legal-chat.js"></script>
+  <!-- cambio para la burbuja global: el asistente IA ahora vive en ai-chat-widget.js -->
+  <script src="js/ai-chat-widget.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       window.KMS.renderLaws();
-      window.KMS.initLegalChat();
       ['lawSearch','lawSubcategoryFilter','lawRoleFilter'].forEach((id) => {
         const node = document.getElementById(id);
         if (node) node.addEventListener('input', window.KMS.renderLaws);

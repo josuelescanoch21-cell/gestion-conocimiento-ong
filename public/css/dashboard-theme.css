@@ -139,3 +139,43 @@ body { background: var(--ui-bg); color: var(--ui-text); font-size: 14px; }
   .panel { padding:16px; }
 }
 .user-card [data-profile-button] { grid-column: 2 / 4; justify-content:flex-start; min-height:24px; padding:0; font-size:.65rem; }
+
+/* Burbuja global del asistente IA: flotante en toda la app, por encima del contenido y del
+   sidebar movil, pero por debajo de los modales (z-index 100) para que nunca los tape. */
+.ai-chat-bubble-button {
+  position: fixed; right: 22px; bottom: 22px; z-index: 90;
+  width: 56px; height: 56px; border-radius: 50%; padding: 0;
+  display: grid; place-items: center; font-size: 1.4rem; line-height: 1;
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  color: #fff; border: none; box-shadow: 0 10px 24px rgba(36,79,69,.35);
+  cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
+}
+.ai-chat-bubble-button:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(36,79,69,.4); }
+.ai-chat-bubble-button.active { background: linear-gradient(135deg, var(--brand-dark), var(--brand-dark)); }
+.ai-chat-bubble-icon { display: inline-flex; }
+
+.ai-chat-bubble-panel {
+  position: fixed; right: 22px; bottom: 90px; z-index: 90;
+  width: 360px; max-width: calc(100vw - 32px);
+  max-height: min(560px, calc(100vh - 130px));
+  display: flex; flex-direction: column;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 20px 45px rgba(20,24,30,.22); overflow: hidden;
+}
+.ai-chat-bubble-panel[hidden] { display: none; }
+.ai-chat-bubble-header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+  padding: 14px 16px; background: var(--surface-soft); border-bottom: 1px solid var(--line);
+}
+.ai-chat-bubble-header strong { display: block; color: var(--brand-dark); }
+.ai-chat-bubble-header .muted { font-size: .78rem; }
+.ai-chat-bubble-panel .chat-messages { padding: 12px 14px; flex: 1; }
+.ai-chat-bubble-panel .chat-form { padding: 10px 14px 14px; margin-top: 0; border-top: 1px solid var(--line); }
+
+@media (max-width: 600px) {
+  .ai-chat-bubble-button { right: 16px; bottom: 16px; width: 52px; height: 52px; }
+  .ai-chat-bubble-panel {
+    right: 8px; left: 8px; bottom: 80px; width: auto; max-width: none;
+    max-height: min(70vh, 520px);
+  }
+}

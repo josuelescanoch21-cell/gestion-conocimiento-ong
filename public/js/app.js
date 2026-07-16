@@ -60,9 +60,21 @@ function sessionHeaders() {
   return headers;
 }
 
+// cambio para seguridad/roles: el cliente de Supabase ahora envia el rol y el id del usuario
+// actual como headers HTTP en cada peticion. PostgREST (el motor de Supabase) reenvia los
+// headers de la peticion hacia Postgres, donde las politicas RLS pueden leerlos con
+// current_setting('request.headers', true)::json ->> 'x-demo-role'. Antes este header se
+// armaba (sessionHeaders) pero nunca se conectaba al cliente, asi que la base de datos no
+// tenia forma de saber que rol hacia cada peticion. Como el login es una sesion demo por
+// localStorage (no Supabase Auth), esto no es equivalente a un JWT firmado, pero si permite
+// que las politicas RLS bloqueen escrituras fuera de la app en el uso normal.
 function supabaseClient() {
   if (!window.supabase || !window.KMS_SUPABASE_URL || !window.KMS_SUPABASE_ANON_KEY || window.KMS_SUPABASE_ANON_KEY.includes('PEGA_AQUI')) return null;
-  if (!window.__kmsSupabase) window.__kmsSupabase = window.supabase.createClient(window.KMS_SUPABASE_URL, window.KMS_SUPABASE_ANON_KEY);
+  if (!window.__kmsSupabase) {
+    window.__kmsSupabase = window.supabase.createClient(window.KMS_SUPABASE_URL, window.KMS_SUPABASE_ANON_KEY, {
+      global: { headers: sessionHeaders() }
+    });
+  }
   return window.__kmsSupabase;
 }
 

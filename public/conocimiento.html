@@ -26,7 +26,7 @@
           <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html"><span class="nav-icon">◎</span>Usuarios</a></li>
           <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html#permisos"><span class="nav-icon">⌕</span>Permisos</a></li>
           <li><a class="nav-link" data-page="foro" href="foro.html"><span class="nav-icon">▤</span>Foro</a></li>
-          <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html#chat-conocimiento"><span class="nav-icon">▣</span>Chat IA</a></li>
+          <li><a class="nav-link" href="#" onclick="window.KMS.openAiChat(); return false;"><span class="nav-icon">▣</span>Chat IA</a></li>
         </ul>
       </nav>
       <section class="sidebar-help" aria-label="Acceso rapido">
@@ -49,29 +49,36 @@
         <div class="page-header">
           <div><h1>Base jerarquica de conocimiento</h1><p>Categorias, subcategorias y articulos con visibilidad por rol y organizacion relacionada.</p></div>
         </div>
-        <section class="panel">
-          <div class="filters">
-            <select data-filter-category aria-label="Filtrar por categoria">
-              <option value="">Todas las categorias</option>
-              <option>Voluntariado</option><option>Donaciones</option><option>Beneficiarios</option><option>Proyectos sociales</option>
-              <option>Capacitaciones</option><option>Documentos internos</option><option>Guias para voluntarios</option><option>Reportes de impacto</option>
-            </select>
-            <select data-filter-subcategory aria-label="Filtrar por subcategoria">
-              <option value="">Todas las subcategorias</option>
-            </select>
-            <input data-filter-author placeholder="Autor" aria-label="Filtrar por autor">
-            <select data-filter-type aria-label="Filtrar por tipo">
-              <option value="">Todo tipo</option><option value="articulo">Articulo</option><option value="guia">Guia</option><option value="reporte">Reporte</option><option value="plantilla">Plantilla</option><option value="politica">Politica</option>
-            </select>
-            <select data-filter-role aria-label="Filtrar por rol permitido">
-              <option value="">Cualquier rol</option><option value="administrador">Administrador</option><option value="creador_ong">Creador ONG</option><option value="voluntario">Voluntario</option>
-            </select>
+        <section class="split knowledge-layout">
+          <aside class="knowledge-sidebar">
+            <section class="panel filter-panel">
+              <div class="section-heading">
+                <div><span class="eyebrow">Explorar</span><h2>Filtros</h2></div>
+                <span class="filter-hint">Refina los resultados</span>
+              </div>
+              <div class="filters filters-column">
+                <label>Categoría<select data-filter-category aria-label="Filtrar por categoria">
+                  <option value="">Todas las categorias</option>
+                  <option>Voluntariado</option><option>Donaciones</option><option>Beneficiarios</option><option>Proyectos sociales</option>
+                  <option>Capacitaciones</option><option>Documentos internos</option><option>Guias para voluntarios</option><option>Reportes de impacto</option>
+                </select></label>
+                <label>Subcategoría<select data-filter-subcategory aria-label="Filtrar por subcategoria"><option value="">Todas las subcategorias</option></select></label>
+                <label>Autor<input data-filter-author placeholder="Nombre del autor" aria-label="Filtrar por autor"></label>
+                <label>Tipo de contenido<select data-filter-type aria-label="Filtrar por tipo">
+                  <option value="">Todo tipo</option><option value="articulo">Articulo</option><option value="guia">Guia</option><option value="reporte">Reporte</option><option value="plantilla">Plantilla</option><option value="politica">Politica</option>
+                </select></label>
+                <label>Visible para<select data-filter-role aria-label="Filtrar por rol permitido">
+                  <option value="">Cualquier rol</option><option value="administrador">Administrador</option><option value="creador_ong">Creador ONG</option><option value="voluntario">Voluntario</option>
+                </select></label>
+              </div>
+              <p class="muted results-count" data-results-count aria-live="polite"></p>
+            </section>
+            <section class="panel knowledge-tree"><h2>Taxonomía</h2><p class="muted side-copy">Navega por los temas principales.</p><div id="knowledgeTree"></div></section>
+          </aside>
+          <div class="knowledge-results">
+            <div class="results-heading"><div><span class="eyebrow">Biblioteca</span><h2>Contenido disponible</h2></div></div>
+            <div class="grid cols-2" id="knowledgeItems" data-search-results></div>
           </div>
-          <p class="muted" data-results-count aria-live="polite"></p>
-        </section>
-        <section class="split">
-          <aside class="panel knowledge-tree"><h2>Taxonomia</h2><div id="knowledgeTree"></div></aside>
-          <div class="grid cols-2" id="knowledgeItems" data-search-results></div>
         </section>
       </section>
     </main>
@@ -83,6 +90,8 @@
   <script src="js/auth.js"></script>
   <script src="js/search.js"></script>
   <script>document.addEventListener('DOMContentLoaded', window.KMS.renderKnowledge);</script>
+  <!-- cambio para la burbuja global: asistente IA disponible en toda la app -->
+  <script src="js/ai-chat-widget.js"></script>
   <script src="js/ui-shell.js"></script>
 </body>
 </html>

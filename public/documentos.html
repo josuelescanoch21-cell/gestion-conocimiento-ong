@@ -26,7 +26,7 @@
           <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html"><span class="nav-icon">◎</span>Usuarios</a></li>
           <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html#permisos"><span class="nav-icon">⌕</span>Permisos</a></li>
           <li><a class="nav-link" data-page="foro" href="foro.html"><span class="nav-icon">▤</span>Foro</a></li>
-          <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html#chat-conocimiento"><span class="nav-icon">▣</span>Chat IA</a></li>
+          <li><a class="nav-link" href="#" onclick="window.KMS.openAiChat(); return false;"><span class="nav-icon">▣</span>Chat IA</a></li>
         </ul>
       </nav>
       <section class="sidebar-help" aria-label="Acceso rapido">
@@ -60,6 +60,8 @@
   <script src="js/auth.js"></script>
   <script src="js/search.js"></script>
   <script>document.addEventListener('DOMContentLoaded', window.KMS.renderDocuments);</script>
+  <!-- cambio para la burbuja global: asistente IA disponible en toda la app -->
+  <script src="js/ai-chat-widget.js"></script>
   <script src="js/ui-shell.js"></script>
 </body>
 </html>

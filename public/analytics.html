@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Analitica | Gestion de Conocimiento ONG</title>
+  <title>Reviews | Gestion de Conocimiento ONG</title>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/dashboard-theme.css">
 </head>
@@ -26,7 +26,7 @@
           <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html"><span class="nav-icon">◎</span>Usuarios</a></li>
           <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html#permisos"><span class="nav-icon">⌕</span>Permisos</a></li>
           <li><a class="nav-link" data-page="foro" href="foro.html"><span class="nav-icon">▤</span>Foro</a></li>
-          <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html#chat-conocimiento"><span class="nav-icon">▣</span>Chat IA</a></li>
+          <li><a class="nav-link" href="#" onclick="window.KMS.openAiChat(); return false;"><span class="nav-icon">▣</span>Chat IA</a></li>
         </ul>
       </nav>
       <section class="sidebar-help" aria-label="Acceso rapido">
@@ -41,21 +41,29 @@
       </section>
     </aside>
     <main class="main">
-      <header class="topbar"><div class="search-box"><input data-search-input type="search" placeholder="Buscar evidencias y reportes"><div class="suggestions" data-suggestions></div></div><a class="button secondary" href="#auditoria">Auditoria</a></header>
-      <section class="content">
-        <div class="page-header"><div><h1>Analitica y mejora continua</h1><p>Lecturas, categorias consultadas, busquedas sin resultado, actividad por rol y oportunidades con mas postulantes.</p></div></div>
-        <section class="grid cols-2">
-          <article class="panel"><h2>Documentos mas vistos</h2><div class="chart" id="chartDocs"></div></article>
-          <article class="panel"><h2>Categorias mas consultadas</h2><div class="chart" id="chartCategories"></div></article>
-          <article class="panel"><h2>Busquedas sin resultado</h2><div class="chart" id="chartNoResults"></div></article>
-          <article class="panel"><h2>Oportunidades con mas postulantes</h2><div class="chart" id="chartOpportunities"></div></article>
-          <article class="panel"><h2>Actividad por rol</h2><div class="chart" id="chartRoles"></div></article>
-          <article class="panel"><h2>Contenido poco visitado</h2><div class="chart" id="chartLow"></div></article>
-          <article class="panel"><h2>Postulaciones por estado</h2><div class="chart" id="chartApplicationStatus"></div></article>
-          <article class="panel"><h2>Favoritos por contenido</h2><div class="chart" id="chartFavorites"></div></article>
+      <header class="topbar"><div class="search-box"><input data-search-input type="search" placeholder="Buscar reportes o actividad"><div class="suggestions" data-suggestions></div></div><a class="button secondary" href="#auditoria">Ver actividad</a></header>
+      <section class="content reviews-page">
+        <div class="page-header reviews-header"><div><span class="eyebrow">Mejora continua</span><h1>Reviews del sistema</h1><p>Una vista sencilla para conocer qué contenido funciona, qué buscan los usuarios y dónde se puede mejorar.</p></div></div>
+        <section class="reviews-guide panel">
+          <div><strong>¿Cómo leer esta sección?</strong><p class="muted">Primero revisa el contenido más consultado, luego identifica búsquedas sin resultado y finalmente observa la actividad reciente.</p></div>
+          <span class="status published">Resumen automático</span>
         </section>
-        <section class="panel table-wrap" id="auditoria">
-          <h2>Auditoria reciente</h2>
+        <div class="section-heading reviews-section-title"><div><span class="eyebrow">Interés de usuarios</span><h2>Contenido y participación</h2></div></div>
+        <section class="grid cols-2 reviews-grid">
+          <article class="panel review-card"><h2>Documentos más vistos</h2><p class="muted">Contenido que genera mayor interés.</p><div class="chart" id="chartDocs"></div></article>
+          <article class="panel review-card"><h2>Categorías más consultadas</h2><p class="muted">Temas que los usuarios revisan con frecuencia.</p><div class="chart" id="chartCategories"></div></article>
+          <article class="panel review-card"><h2>Oportunidades con más postulantes</h2><p class="muted">Convocatorias con mayor participación.</p><div class="chart" id="chartOpportunities"></div></article>
+          <article class="panel review-card"><h2>Favoritos por contenido</h2><p class="muted">Recursos guardados por la comunidad.</p><div class="chart" id="chartFavorites"></div></article>
+        </section>
+        <div class="section-heading reviews-section-title"><div><span class="eyebrow">Puntos de mejora</span><h2>Seguimiento básico</h2></div></div>
+        <section class="grid cols-2 reviews-grid">
+          <article class="panel review-card"><h2>Búsquedas sin resultado</h2><p class="muted">Ideas de contenido que todavía faltan.</p><div class="chart" id="chartNoResults"></div></article>
+          <article class="panel review-card"><h2>Contenido poco visitado</h2><p class="muted">Recursos que pueden necesitar mejor difusión.</p><div class="chart" id="chartLow"></div></article>
+          <article class="panel review-card"><h2>Actividad por rol</h2><p class="muted">Participación general dentro del sistema.</p><div class="chart" id="chartRoles"></div></article>
+          <article class="panel review-card"><h2>Postulaciones por estado</h2><p class="muted">Situación actual de las postulaciones.</p><div class="chart" id="chartApplicationStatus"></div></article>
+        </section>
+        <section class="panel table-wrap review-audit" id="auditoria">
+          <div class="section-heading"><div><span class="eyebrow">Historial</span><h2>Actividad reciente</h2></div></div>
           <table>
             <thead><tr><th>Fecha</th><th>Accion</th><th>Usuario</th><th>Entidad</th></tr></thead>
             <tbody id="auditTable"></tbody>
@@ -72,6 +80,8 @@
   <script src="js/search.js"></script>
   <script src="js/analytics.js"></script>
   <script src="js/audit.js"></script>
+  <!-- cambio para la burbuja global: asistente IA disponible en toda la app -->
+  <script src="js/ai-chat-widget.js"></script>
   <script src="js/ui-shell.js"></script>
 </body>
 </html>

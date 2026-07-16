@@ -26,7 +26,7 @@
           <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html"><span class="nav-icon">◎</span>Usuarios</a></li>
           <li data-role-only="administrador"><a class="nav-link" data-page="admin" href="admin.html#permisos"><span class="nav-icon">⌕</span>Permisos</a></li>
           <li><a class="nav-link" data-page="foro" href="foro.html"><span class="nav-icon">▤</span>Foro</a></li>
-          <li><a class="nav-link" data-page="conocimiento" href="conocimiento.html#chat-conocimiento"><span class="nav-icon">▣</span>Chat IA</a></li>
+          <li><a class="nav-link" href="#" onclick="window.KMS.openAiChat(); return false;"><span class="nav-icon">▣</span>Chat IA</a></li>
         </ul>
       </nav>
       <section class="sidebar-help" aria-label="Acceso rapido">
@@ -50,7 +50,9 @@
           <span class="forum-icon" data-icon="plus"></span>Nuevo tema
         </button>
       </header>
-      <section class="content">
+      <section class="content forum-page">
+        <section class="forum-welcome panel"><div><span class="eyebrow">Comunidad ONG</span><h2>Aprende de experiencias reales</h2><p class="muted">Elige un tablero, revisa los aportes y comparte una experiencia de forma clara y breve.</p></div><div class="forum-steps"><span>1. Elige</span><span>2. Lee</span><span>3. Participa</span></div></section>
+        <div class="section-heading forum-section-heading"><div><span class="eyebrow">Tableros</span><h2>¿Qué deseas revisar?</h2></div></div>
         <div class="forum-boards" id="forumBoards" role="tablist" aria-label="Tableros del foro">
           <button type="button" class="forum-board-card forum-board-good" data-forum-board-tab="buenas_practicas">
             <span class="forum-board-icon" data-icon="bulb"></span>
@@ -69,6 +71,7 @@
             <span class="forum-board-count" data-forum-count="malas_practicas">0</span>
           </button>
         </div>
+        <div class="section-heading forum-section-heading"><div><span class="eyebrow">Conversaciones</span><h2>Temas recientes</h2></div></div>
         <div class="forum-feed" id="forumTopics"></div>
       </section>
     </main>
@@ -80,6 +83,8 @@
   <script src="js/auth.js"></script>
   <script src="js/forum.js"></script>
   <script>document.addEventListener('DOMContentLoaded', window.KMS.initForumTabs);</script>
+  <!-- cambio para la burbuja global: asistente IA disponible en toda la app -->
+  <script src="js/ai-chat-widget.js"></script>
   <script src="js/ui-shell.js"></script>
 </body>
 </html>
