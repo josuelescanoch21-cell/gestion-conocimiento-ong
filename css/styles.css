@@ -769,6 +769,7 @@ th {
   display: flex; align-items: center; gap: 12px; text-align: left;
   background: var(--surface); border: 2px solid var(--line); border-radius: 14px;
   padding: 14px 16px; cursor: pointer; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  color: var(--ink);
 }
 .forum-board-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 .forum-board-icon {
@@ -868,6 +869,44 @@ th {
 .forum-reply:last-child { margin-bottom: 0; }
 .forum-closed-note { display: flex; align-items: center; gap: 6px; }
 
+/* cambio para el foro (dislike): boton "No util" reusa el icono de "like" volteado con CSS,
+   y al estar activo se pinta con el mismo tono calido usado para "malas practicas". */
+.forum-icon-flip svg { transform: scaleY(-1); }
+.forum-reaction-dislike.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* cambio para el foro (check verificado): insignia tipo Instagram/Twitter, solo para
+   Creador ONG (Voluntario no lleva ninguna insignia). Dorado calido para que combine
+   con la paleta institucional (verde + tonos calidos) en vez de un amarillo generico. */
+.forum-name-line { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.verified-badge {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 15px; height: 15px; border-radius: 50%; color: #fff;
+  background: linear-gradient(145deg, #e0b23d, #b3841c);
+  box-shadow: 0 0 0 1px rgba(179, 132, 28, .25);
+}
+.verified-badge svg { width: 10px; height: 10px; }
+
+/* cambio para el foro (hilos anidados): respuestas a respuestas, colapsadas por defecto
+   detras de un boton "+N respuestas mas" que alterna a "(-) Ocultar respuestas". No se
+   intenta extender la linea de tiempo de arriba a estos niveles anidados, para no
+   complicar el dibujo; en vez de eso se usa una indentacion simple con borde izquierdo. */
+.forum-reply-actions { margin-top: 6px; }
+.forum-inline-reply { margin-top: 8px; }
+.forum-inline-reply textarea { min-height: 60px; }
+.forum-replies-toggle {
+  display: inline-flex; align-items: center; gap: 6px; background: none; border: none;
+  box-shadow: none; padding: 4px 0 4px 8px; margin-left: 8px; color: var(--brand-dark);
+  font-weight: 700; font-size: .82rem; cursor: pointer;
+}
+.forum-replies-toggle:hover { text-decoration: underline; }
+.forum-replies-children {
+  margin: 6px 0 10px 22px; padding-left: 14px; border-left: 2px solid var(--line);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.forum-replies-children .forum-reply { margin-bottom: 0; }
+.forum-replies-children .forum-reply::before { display: none; }
+.forum-reply-placeholder { margin: 6px 0 6px 22px; }
+
 [data-forum-new-topic][hidden] { display: none; }
 
 @media (max-width: 720px) {
@@ -931,4 +970,53 @@ th {
 @media (max-width:700px) {
   .reviews-guide, .forum-welcome { align-items:flex-start; flex-direction:column; }
   .forum-steps { width:100%; }
+}
+
+/* Resumen de datos personales en la postulación a voluntariados */
+.application-intro { margin: -4px 0 14px; }
+.application-profile-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.application-profile-summary > div {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #dbe5e1;
+  border-radius: 12px;
+  background: #f5faf8;
+}
+.application-profile-summary span {
+  display: block;
+  margin-bottom: 4px;
+  color: #66756f;
+  font-size: .78rem;
+}
+.application-profile-summary strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #173d33;
+  font-size: .94rem;
+}
+.profile-warning {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #e6c875;
+  border-radius: 12px;
+  background: #fff9e8;
+  color: #6f5512;
+}
+.application-form label:not(.check) {
+  display: grid;
+  gap: 7px;
+  font-weight: 700;
+  color: #173d33;
+}
+.optional-label { color: #72817c; font-size: .78rem; font-weight: 500; }
+.application-form button:disabled { cursor: not-allowed; opacity: .55; }
+@media (max-width: 600px) {
+  .application-profile-summary { grid-template-columns: 1fr; }
 }

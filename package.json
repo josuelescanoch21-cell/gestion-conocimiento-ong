@@ -1,0 +1,24 @@
+{
+  "name": "gestion-conocimiento-ong",
+  "version": "1.5.0",
+  "description": "Frontend de gestion de conocimiento para ONG conectado directamente a Supabase.",
+  "main": "static-server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node static-server.js"
+  },
+  "keywords": [
+    "ong",
+    "kms",
+    "supabase",
+    "frontend",
+    "railway"
+  ],
+  "author": "Proyecto Final Gestion del Conocimiento",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18"
+  }
+}

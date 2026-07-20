@@ -1,40 +1,148 @@
+
+
 <!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Acceso y registro en la plataforma de Gestion de Conocimiento ONG">
   <title>Acceso | Gestion de Conocimiento ONG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/auth.css">
 </head>
 <body>
   <main class="login-page">
-    <section class="login-card" aria-labelledby="login-title">
-      <div class="brand">
-        <span class="brand-mark">GC</span>
-        <div>
-          <strong id="login-title">Gestion de Conocimiento ONG</strong>
-          <span>Wiki institucional, busqueda y analitica social</span>
-        </div>
+    <section class="auth-container" id="authContainer" aria-label="Inicio de sesion y registro">
+      <!-- Formulario de registro -->
+      <div class="auth-form-container auth-sign-up">
+        <form id="registerForm" data-register-form novalidate>
+          <div class="auth-form-header">
+            <span class="auth-eyebrow">Únete a la comunidad</span>
+            <h1>Crear cuenta</h1>
+            <p>Registra tus datos para participar en la plataforma.</p>
+          </div>
+
+          <div class="auth-fields auth-fields-register">
+            <div class="auth-field-row">
+              <label class="auth-field">
+                <span>Nombres</span>
+                <input name="first_name" type="text" autocomplete="given-name" placeholder="Ej. Josué" minlength="2" maxlength="60" required>
+              </label>
+              <label class="auth-field">
+                <span>Apellidos</span>
+                <input name="last_name" type="text" autocomplete="family-name" placeholder="Ej. Lescano" minlength="2" maxlength="80" required>
+              </label>
+            </div>
+
+            <div class="auth-field-row">
+              <label class="auth-field">
+                <span>DNI</span>
+                <input name="dni" type="text" inputmode="numeric" autocomplete="off" placeholder="8 dígitos" pattern="[0-9]{8}" maxlength="8" required>
+              </label>
+              <label class="auth-field">
+                <span>Fecha de nacimiento</span>
+                <input name="birth_date" type="date" autocomplete="bday" required>
+              </label>
+            </div>
+
+            <label class="auth-field">
+              <span>Teléfono</span>
+              <input name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ej. 987654321" pattern="[0-9+()\s-]{7,20}" maxlength="20" required>
+            </label>
+
+            <label class="auth-field">
+              <span>ONG a la que perteneces <small>(opcional)</small></span>
+              <input name="ong_affiliation" type="text" autocomplete="organization" placeholder="Ej. Manos Abiertas" maxlength="120">
+            </label>
+
+            <label class="auth-field">
+              <span>Correo</span>
+              <input name="email" type="email" autocomplete="email" placeholder="correo@ejemplo.com" required>
+            </label>
+
+            <label class="auth-field">
+              <span>Contraseña</span>
+              <span class="auth-password-wrap">
+                <input name="password" type="password" autocomplete="new-password" placeholder="Crea una contraseña segura" minlength="8" required aria-describedby="passwordHelp passwordStrengthText">
+                <button class="auth-password-toggle" type="button" data-toggle-password aria-label="Mostrar contraseña">Ver</button>
+              </span>
+            </label>
+
+            <div class="password-strength" aria-live="polite">
+              <div class="password-strength-track"><span data-password-strength></span></div>
+              <small id="passwordStrengthText" data-password-strength-text>La contraseña debe ser fuerte.</small>
+            </div>
+            <small class="auth-help" id="passwordHelp">Mínimo 8 caracteres, con mayúscula, minúscula, número y símbolo.</small>
+          </div>
+
+          <button class="auth-submit" type="submit">Crear cuenta</button>
+          <p class="auth-message" data-register-message aria-live="polite"></p>
+          <button class="auth-mobile-switch" type="button" data-show-login>Ya tengo una cuenta</button>
+        </form>
       </div>
-      <form class="form-grid" data-login-form>
-        <label>
-          Correo
-          <input name="email" type="email" value="admin@ongkms.test" autocomplete="email" required>
-        </label>
-        <label>
-          Contrasena
-          <input name="password" type="password" value="demo123" autocomplete="current-password" required>
-        </label>
-        <button type="submit">Ingresar</button>
-        <p class="muted" data-login-message>Usa demo123 con cualquier cuenta de prueba.</p>
-      </form>
-      <div class="grid">
-        <button class="secondary" type="button" data-demo-login="admin@ongkms.test">Administrador</button>
-        <button class="secondary" type="button" data-demo-login="creador@ongkms.test">Creador ONG</button>
-        <button class="secondary" type="button" data-demo-login="voluntario@ongkms.test">Voluntario</button>
+
+      <!-- Formulario de inicio de sesión -->
+      <div class="auth-form-container auth-sign-in">
+        <form id="loginForm" data-login-form novalidate>
+          <div class="auth-form-header">
+            <span class="auth-eyebrow">Bienvenido nuevamente</span>
+            <h1>Iniciar sesión</h1>
+            <p>Accede con tu correo y contraseña.</p>
+          </div>
+
+          <div class="auth-fields">
+            <label class="auth-field">
+              <span>Correo</span>
+              <input name="email" type="email" autocomplete="email" placeholder="correo@ejemplo.com" required>
+            </label>
+            <label class="auth-field">
+              <span>Contraseña</span>
+              <span class="auth-password-wrap">
+                <input name="password" type="password" autocomplete="current-password" placeholder="Tu contraseña" required>
+                <button class="auth-password-toggle" type="button" data-toggle-password aria-label="Mostrar contraseña">Ver</button>
+              </span>
+            </label>
+          </div>
+
+          <button class="auth-submit" type="submit">Ingresar</button>
+          <p class="auth-message" data-login-message aria-live="polite"></p>
+
+          <details class="demo-access">
+            <summary>Accesos de demostración</summary>
+            <div class="demo-grid">
+              <button type="button" data-demo-login="admin@ongkms.test">Administrador</button>
+              <button type="button" data-demo-login="creador@ongkms.test">Creador ONG</button>
+              <button type="button" data-demo-login="voluntario@ongkms.test">Voluntario</button>
+            </div>
+            <small>Contraseña de demostración: demo123</small>
+          </details>
+          <button class="auth-mobile-switch" type="button" data-show-register>Crear una cuenta</button>
+        </form>
+      </div>
+
+      <!-- Panel animado inspirado en el diseño de referencia -->
+      <div class="auth-toggle-container" aria-hidden="true">
+        <div class="auth-toggle">
+          <div class="auth-toggle-panel auth-toggle-left">
+            <span class="auth-panel-mark">GC</span>
+            <h2>¡Bienvenido otra vez!</h2>
+            <p>Ingresa para continuar compartiendo conocimiento y generando impacto social.</p>
+            <button type="button" id="showLogin">Iniciar sesión</button>
+          </div>
+          <div class="auth-toggle-panel auth-toggle-right">
+            <span class="auth-panel-mark">GC</span>
+            <h2>¡Hola!</h2>
+            <p>Crea tu cuenta y forma parte de una red que conecta personas, ONG y conocimiento.</p>
+            <button type="button" id="showRegister">Registrarme</button>
+          </div>
+        </div>
       </div>
     </section>
   </main>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/auth.js"></script>

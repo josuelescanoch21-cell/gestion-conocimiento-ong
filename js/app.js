@@ -103,7 +103,7 @@ async function api(path, options = {}) {
   if (path === '/api/admin/roles') return run(db.from('roles').select('*').order('name'));
 
   if (path === '/api/admin/users') {
-    return run(db.from('users').select('id, full_name, email, status, last_login_at, roles(id,name), organizations(id,name)').order('full_name'));
+    return run(db.from('users').select('id, full_name, email, ong_affiliation, status, last_login_at, roles(id,name), organizations(id,name)').order('full_name'));
   }
 
   const roleMatch = path.match(/^\/api\/admin\/users\/([^/]+)\/role$/);
@@ -124,7 +124,7 @@ async function api(path, options = {}) {
     return run(db.from('subcategories').insert(body).select().single());
   }
 
-  if (path === '/api/knowledge') {
+  if (path === '/api/knowledge' && method === 'GET') {
     return run(db.from('knowledge_items').select('*, categories(name), subcategories(name), organizations(name), users(full_name,email)').order('updated_at', { ascending: false }));
   }
 
@@ -165,7 +165,7 @@ async function api(path, options = {}) {
     return (rows || []).map((row) => row.knowledge_items).filter(Boolean);
   }
 
-  if (path === '/api/opportunities') {
+  if (path === '/api/opportunities' && method === 'GET') {
     return run(db.from('volunteer_opportunities').select('*, organizations(name), applications(id)').order('created_at', { ascending: false }));
   }
 
@@ -198,7 +198,7 @@ async function api(path, options = {}) {
   const appStatusMatch = path.match(/^\/api\/opportunities\/([^/]+)\/applications\/([^/]+)$/);
   if (appStatusMatch && method === 'PATCH') return run(db.from('applications').update({ status: body.status }).eq('id', appStatusMatch[2]).select().single());
 
-  if (path === '/api/documents') {
+  if (path === '/api/documents' && method === 'GET') {
     let q = db.from('user_documents').select('*, users(full_name,email,organization_id, organizations(name))').order('created_at', { ascending: false });
     if (user.role === 'voluntario' && user.id) q = q.eq('user_id', user.id);
     if (user.role === 'creador_ong' && user.organization_id) q = q.eq('organization_id', user.organization_id);
@@ -221,11 +221,11 @@ async function api(path, options = {}) {
     const board = url.searchParams.get('board');
     const single = path.match(/^\/api\/forum\/topics\/([^/?]+)$/);
     if (single) {
-      const topic = await run(db.from('forum_topics').select('*, organizations(name), users!created_by(full_name), forum_reactions(user_id)').eq('id', single[1]).single());
-      const replies = await run(db.from('forum_replies').select('*, users!created_by(full_name)').eq('topic_id', single[1]).order('created_at', { ascending: true }));
+      const topic = await run(db.from('forum_topics').select('*, organizations(name), users!created_by(full_name, roles(name)), forum_reactions(user_id, reaction_type)').eq('id', single[1]).single());
+      const replies = await run(db.from('forum_replies').select('*, users!created_by(full_name, roles(name))').eq('topic_id', single[1]).order('created_at', { ascending: true }));
       return { topic, replies };
     }
-    let query = db.from('forum_topics').select('*, organizations(name), users!created_by(full_name), forum_replies(id), forum_reactions(user_id)').order('is_pinned', { ascending: false }).order('created_at', { ascending: false });
+    let query = db.from('forum_topics').select('*, organizations(name), users!created_by(full_name, roles(name)), forum_replies(id), forum_reactions(user_id, reaction_type)').order('is_pinned', { ascending: false }).order('created_at', { ascending: false });
     if (board) query = query.eq('board', board);
     return run(query);
   }
@@ -251,7 +251,7 @@ async function api(path, options = {}) {
     if (!['creador_ong', 'voluntario'].includes(user.role)) throw new Error('Solo Creador ONG y Voluntario pueden responder en el foro.');
     const topic = await run(db.from('forum_topics').select('status,is_removed').eq('id', forumReplyMatch[1]).single());
     if (topic.status === 'cerrado' || topic.is_removed) throw new Error('Este tema esta cerrado y no admite nuevas respuestas.');
-    const payload = { topic_id: forumReplyMatch[1], content: body.content, author_name: user.full_name || user.name || user.email || 'Usuario', created_by: user.id || null, organization_id: user.organization_id || null };
+    const payload = { topic_id: forumReplyMatch[1], content: body.content, parent_reply_id: body.parent_reply_id || null, author_name: user.full_name || user.name || user.email || 'Usuario', created_by: user.id || null, organization_id: user.organization_id || null };
     return run(db.from('forum_replies').insert(payload).select().single());
   }
 
@@ -262,20 +262,22 @@ async function api(path, options = {}) {
     return run(db.from('forum_replies').update(payload).eq('id', forumReplyModerateMatch[1]).select().single());
   }
 
-  // cambio para el foro (rediseno): reaccion "Util" (like) por tema. Toggle: si ya reacciono, se
-  // quita su reaccion; si no, se agrega. Un usuario solo puede tener una reaccion por tema
-  // (constraint unique(topic_id, user_id) en la tabla forum_reactions).
+  // cambio para el foro (dislike): reaccion "Util" o "No util" por tema. Un usuario solo puede
+  // tener una reaccion por tema (constraint unique(topic_id, user_id)). Si repite el mismo tipo,
+  // se quita (toggle off); si manda el otro tipo, se reemplaza. Se hace con delete+insert (no
+  // update) porque database/rls_role_policies.sql solo define insert/delete para esta tabla.
   const forumReactMatch = path.match(/^\/api\/forum\/topics\/([^/]+)\/react$/);
   if (forumReactMatch && method === 'POST') {
     if (!['creador_ong', 'voluntario'].includes(user.role)) throw new Error('Solo Creador ONG y Voluntario pueden reaccionar en el foro.');
     if (!user.id) throw new Error('No se pudo identificar tu usuario.');
-    const existing = await run(db.from('forum_reactions').select('id').eq('topic_id', forumReactMatch[1]).eq('user_id', user.id).maybeSingle());
+    const reactionType = body.type === 'no_util' ? 'no_util' : 'util';
+    const existing = await run(db.from('forum_reactions').select('id, reaction_type').eq('topic_id', forumReactMatch[1]).eq('user_id', user.id).maybeSingle());
     if (existing) {
       await run(db.from('forum_reactions').delete().eq('id', existing.id));
-      return { reacted: false };
+      if (existing.reaction_type === reactionType) return { reaction: null };
     }
-    await run(db.from('forum_reactions').insert({ topic_id: forumReactMatch[1], user_id: user.id }));
-    return { reacted: true };
+    await run(db.from('forum_reactions').insert({ topic_id: forumReactMatch[1], user_id: user.id, reaction_type: reactionType }));
+    return { reaction: reactionType };
   }
 
   if (path.startsWith('/api/search')) {
@@ -303,15 +305,24 @@ async function api(path, options = {}) {
 
 
   if (path === '/api/profile/me' && method === 'PUT') {
-    if (!user.id) {
-      return { full_name: body.full_name, email: body.email, user_profiles: [{ phone: body.phone, photo_url: body.photo_url, organization_position: body.organization_position, skills: body.skills, bio: body.bio }] };
-    }
-    await run(db.from('users').update({ full_name: body.full_name, email: body.email }).eq('id', user.id).select().single());
-    const profilePayload = { user_id: user.id, phone: body.phone || null, photo_url: body.photo_url || null, organization_position: body.organization_position || null, skills: body.skills || [], bio: body.bio || null };
+    const fullName = `${body.first_name || ''} ${body.last_name || ''}`.replace(/\s+/g, ' ').trim();
+    const userPayload = {
+      full_name: fullName,
+      first_name: body.first_name || null,
+      last_name: body.last_name || null,
+      dni: body.dni || null,
+      birth_date: body.birth_date || null,
+      phone: body.phone || null,
+      ong_affiliation: body.ong_affiliation || null
+    };
+    const profilePayload = { user_id: user.id, skills: body.skills || [], bio: body.bio || null };
+    if (!user.id) return { ...userPayload, email: body.email, user_profiles: [profilePayload] };
+
+    await run(db.from('users').update(userPayload).eq('id', user.id).select().single());
     const { data: existing } = await db.from('user_profiles').select('id').eq('user_id', user.id).maybeSingle();
     if (existing) await run(db.from('user_profiles').update(profilePayload).eq('id', existing.id).select().single());
     else await run(db.from('user_profiles').insert(profilePayload).select().single());
-    return { full_name: body.full_name, email: body.email, user_profiles: [profilePayload] };
+    return { ...userPayload, email: user.email, user_profiles: [profilePayload] };
   }
 
   if (path === '/api/audit') return run(db.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50));
@@ -572,21 +583,18 @@ function clearLawFilters() {
   renderLaws();
 }
 
-function openLawForm(id = '') {
+async function openLawForm(id = '') {
   const user = currentUser();
   if (!['administrador','creador_ong'].includes(user.role)) { toast('Solo Administrador y Creador ONG pueden modificar leyes.', 'error'); return; }
-  openArticleForm(id);
-  setTimeout(() => {
-    const form = byId('articleForm');
-    if (!form) return;
-    const category = state.categories.find((cat) => cat.name === 'Leyes para ONG');
-    if (category && form.category_id) {
-      form.category_id.value = category.id || category.name;
-      form.category_id.dispatchEvent(new Event('change'));
-    }
-    if (form.document_type) form.document_type.value = 'ley';
-    if (form.visibility) form.visibility.value = 'publico';
-  }, 0);
+  const form = await openArticleForm(id);
+  if (!form) return;
+  const category = state.categories.find((cat) => cat.name === 'Leyes para ONG');
+  if (category && form.category_id) {
+    form.category_id.value = category.id || category.name;
+    form.category_id.dispatchEvent(new Event('change'));
+  }
+  if (form.document_type) form.document_type.value = 'ley';
+  if (form.visibility) form.visibility.value = 'publico';
 }
 
 async function renderDocuments() {
@@ -645,11 +653,31 @@ async function openArticle(id) {
   const sourceButton = item.source_url ? `<a class="button secondary" href="${escapeHtml(item.source_url)}" target="_blank" rel="noopener noreferrer">Ver fuente oficial</a>` : '';
   openModal(`<h2>${escapeHtml(item.title)}</h2>${item.image_url ? `<img class="modal-image" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}">` : ''}<p class="muted">${escapeHtml(item.category)} · ${escapeHtml(item.author)} · ${escapeHtml(item.date)}</p><p class="detail-description">${escapeHtml(item.description)}</p>${item.legal_reference ? `<p class="muted"><strong>Referencia:</strong> ${escapeHtml(item.legal_reference)}</p>` : ''}${sourceButton}<div class="article-content rich-lines">${escapeHtml(item.content || '').replace(/\n/g, '<br>')}</div>`);
 }
-function openArticleForm(id = '') {
+async function openArticleForm(id = '') {
   const user = currentUser();
-  if (!['administrador','creador_ong'].includes(user.role)) { toast('Solo Administrador y Creador ONG pueden crear o editar articulos.', 'error'); return; }
-  const item = state.items.find((row) => String(row.id) === String(id)) || {};
-  if (!state.categories.length) { loadTaxonomy().then(() => openArticleForm(id)); return; }
+  if (!['administrador','creador_ong'].includes(user.role)) { toast('Solo Administrador y Creador ONG pueden crear o editar articulos.', 'error'); return null; }
+
+  if (!state.categories.length) await loadTaxonomy();
+
+  let item = state.items.find((row) => String(row.id) === String(id));
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id));
+
+  // Obtiene una copia fresca desde Supabase para evitar formularios vacíos o datos antiguos.
+  if (id && isUuid) {
+    try { item = normalizeItem(await api(`/api/knowledge/${id}`)); }
+    catch { /* usa el dato ya cargado como respaldo */ }
+  }
+
+  // Algunas leyes oficiales se cargan desde laws-data.js. Se muestran en el editor y,
+  // al guardarlas por primera vez, se crean como un nuevo registro en knowledge_items.
+  if (!item && id) {
+    item = [...(window.ONG_LAWS || []), ...demo.items]
+      .map(normalizeItem)
+      .find((row) => String(row.id) === String(id));
+  }
+
+  item = item || {};
+  const databaseId = isUuid ? id : '';
   const selectedCategory = item.category_id || item.category || (state.categories[0]?.id || '');
   openModal(`<h2>${id ? 'Editar articulo' : 'Crear articulo'}</h2><form id="articleForm" class="stack-form">
     <input name="title" required placeholder="Titulo" value="${escapeHtml(item.title || '')}">
@@ -670,7 +698,8 @@ function openArticleForm(id = '') {
   const roleSelect = form.visible_to_roles;
   [...roleSelect.options].forEach((option) => { option.selected = (item.roles || item.visible_to_roles || ['administrador','creador_ong','voluntario']).includes(option.value); });
   byId('articleCategory').addEventListener('change', (event) => { byId('articleSubcategory').innerHTML = '<option value="">Sin subcategoria</option>' + subcategoryOptions(event.target.value); });
-  form.onsubmit = (event) => saveArticle(event, id);
+  form.onsubmit = (event) => saveArticle(event, databaseId);
+  return form;
 }
 async function saveArticle(event, id) { event.preventDefault(); const formData = new FormData(event.target); const data = Object.fromEntries(formData); data.visible_to_roles = formData.getAll('visible_to_roles'); data.tags = String(data.tags_text || '').split(',').map((tag) => tag.trim()).filter(Boolean); delete data.tags_text; if (!data.subcategory_id) data.subcategory_id = null; try { await api(id ? `/api/knowledge/${id}` : '/api/knowledge', { method: id ? 'PUT' : 'POST', body: JSON.stringify(data) }); toast('Articulo guardado correctamente.'); closeModal(); if (document.getElementById('lawItems')) renderLaws(); else renderKnowledge(); } catch (error) { toast(error.message, 'error'); } }
 async function publishArticle(id) { try { await api(`/api/knowledge/${id}/publish`, { method: 'PATCH' }); toast('Articulo aprobado y publicado.'); if (document.getElementById('lawItems')) renderLaws(); else renderKnowledge(); } catch (error) { toast(error.message, 'error'); } }
@@ -739,8 +768,79 @@ async function saveOpportunity(event, id) {
     renderOpportunities();
   } catch (error) { toast(error.message, 'error'); }
 }
-function openApplyForm(id) { openModal(`<h2>Postular a oportunidad</h2><form id="applyForm" class="stack-form"><input name="applicant_name" required placeholder="Nombre completo"><input name="applicant_email" required type="email" placeholder="Correo"><input name="phone" placeholder="Telefono"><input name="document_number" placeholder="Documento/DNI"><input name="age" type="number" min="14" max="120" placeholder="Edad"><input name="availability" placeholder="Disponibilidad"><textarea name="experience" placeholder="Experiencia previa"></textarea><input name="skills" placeholder="Habilidades separadas por coma"><textarea name="motivation" required placeholder="Motivacion"></textarea><label class="check"><input type="checkbox" name="consent_data" required> Acepto el uso de mis datos para gestionar esta postulacion.</label><button type="submit">Enviar postulacion</button></form>`); byId('applyForm').onsubmit = (event) => submitApplication(event, id); }
-async function submitApplication(event, id) { event.preventDefault(); const data = Object.fromEntries(new FormData(event.target)); data.consent_data = Boolean(data.consent_data); data.age = data.age ? Number(data.age) : null; try { await api(`/api/opportunities/${id}/apply`, { method: 'POST', body: JSON.stringify(data) }); toast('Postulacion enviada correctamente.'); closeModal(); renderOpportunities(); } catch (error) { toast(error.message, 'error'); } }
+function calculateAgeFromBirthDate(birthDate) {
+  if (!birthDate) return null;
+  const parts = String(birthDate).slice(0, 10).split('-').map(Number);
+  if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+  const [year, month, day] = parts;
+  const today = new Date();
+  let age = today.getFullYear() - year;
+  const birthdayPending = (today.getMonth() + 1 < month) || ((today.getMonth() + 1 === month) && today.getDate() < day);
+  if (birthdayPending) age -= 1;
+  return age >= 0 ? age : null;
+}
+
+function openApplyForm(id) {
+  const user = currentUser();
+  const firstName = String(user.first_name || '').trim();
+  const lastName = String(user.last_name || '').trim();
+  const fullName = `${firstName} ${lastName}`.trim() || user.full_name || user.name || '';
+  const email = String(user.email || '').trim();
+  const phone = String(user.phone || '').trim();
+  const dni = String(user.dni || '').trim();
+  const age = calculateAgeFromBirthDate(user.birth_date);
+  const missing = [
+    !firstName && 'nombres',
+    !lastName && 'apellidos',
+    !email && 'correo',
+    !phone && 'teléfono',
+    !dni && 'DNI',
+    age === null && 'fecha de nacimiento'
+  ].filter(Boolean);
+
+  openModal(`<h2>Postular a oportunidad</h2>
+    <p class="muted application-intro">Revisa tus datos personales. Se obtienen automáticamente de tu cuenta y no necesitas volver a escribirlos.</p>
+    ${missing.length ? `<div class="profile-warning"><strong>Tu perfil está incompleto.</strong><span>Completa ${escapeHtml(missing.join(', '))} desde “Mi perfil” antes de enviar la postulación.</span></div>` : ''}
+    <section class="application-profile-summary" aria-label="Resumen de datos personales">
+      <div><span>Nombres</span><strong>${escapeHtml(firstName || 'No registrado')}</strong></div>
+      <div><span>Apellidos</span><strong>${escapeHtml(lastName || 'No registrado')}</strong></div>
+      <div><span>Correo</span><strong>${escapeHtml(email || 'No registrado')}</strong></div>
+      <div><span>Teléfono</span><strong>${escapeHtml(phone || 'No registrado')}</strong></div>
+      <div><span>DNI</span><strong>${escapeHtml(dni || 'No registrado')}</strong></div>
+      <div><span>Edad calculada</span><strong>${age === null ? 'No disponible' : `${age} años`}</strong></div>
+    </section>
+    <form id="applyForm" class="stack-form application-form">
+      <input type="hidden" name="applicant_name" value="${escapeHtml(fullName)}">
+      <input type="hidden" name="applicant_email" value="${escapeHtml(email)}">
+      <input type="hidden" name="phone" value="${escapeHtml(phone)}">
+      <input type="hidden" name="document_number" value="${escapeHtml(dni)}">
+      <input type="hidden" name="age" value="${age ?? ''}">
+      <label>Disponibilidad<input name="availability" required placeholder="Ej. Lunes a viernes de 3 p. m. a 7 p. m."></label>
+      <label>Experiencia previa <span class="optional-label">(opcional)</span><textarea name="experience" placeholder="Describe brevemente tu experiencia relacionada"></textarea></label>
+      <label>Habilidades separadas por comas<input name="skills" required placeholder="Ej. comunicación, Excel, liderazgo"></label>
+      <label>Motivación<textarea name="motivation" required placeholder="Cuéntanos por qué deseas participar"></textarea></label>
+      <label class="check"><input type="checkbox" name="consent_data" required> Acepto el uso de mis datos para gestionar esta postulación.</label>
+      <button type="submit" ${missing.length ? 'disabled title="Completa primero los datos faltantes en Mi perfil"' : ''}>Enviar postulación</button>
+    </form>`);
+  byId('applyForm').onsubmit = (event) => submitApplication(event, id);
+}
+
+async function submitApplication(event, id) {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(event.target));
+  data.consent_data = Boolean(data.consent_data);
+  data.age = data.age ? Number(data.age) : null;
+  if (!data.applicant_name || !data.applicant_email || !data.phone || !data.document_number || data.age === null) {
+    toast('Completa tus datos personales desde “Mi perfil” antes de postular.', 'error');
+    return;
+  }
+  try {
+    await api(`/api/opportunities/${id}/apply`, { method: 'POST', body: JSON.stringify(data) });
+    toast('Postulación enviada correctamente.');
+    closeModal();
+    renderOpportunities();
+  } catch (error) { toast(error.message, 'error'); }
+}
 async function loadApplicants(id) { try { const payload = await api(`/api/opportunities/${id}/applications`); openModal(`<h2>Postulantes: ${escapeHtml(payload.opportunity.title)}</h2><div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Contacto</th><th>Disponibilidad</th><th>Datos</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${payload.applications.map((app) => `<tr><td>${escapeHtml(app.applicant_name || app.users?.full_name)}</td><td>${escapeHtml(app.applicant_email || app.users?.email)}<br>${escapeHtml(app.phone || '')}</td><td>${escapeHtml(app.availability || '')}</td><td>${escapeHtml(app.document_number || '')}<br>${escapeHtml(app.age ? `${app.age} años` : '')}</td><td><span class="status draft">${escapeHtml(app.status)}</span></td><td><button onclick="window.KMS.updateApplication('${id}','${app.id}','revision')">Revision</button><button class="secondary" onclick="window.KMS.updateApplication('${id}','${app.id}','entrevista')">Entrevista</button><button onclick="window.KMS.updateApplication('${id}','${app.id}','aceptada')">Aceptar</button><button class="secondary" onclick="window.KMS.updateApplication('${id}','${app.id}','rechazada')">Rechazar</button><button class="secondary" onclick="window.KMS.updateApplication('${id}','${app.id}','finalizada')">Finalizar</button></td></tr>`).join('')}</tbody></table></div>`); } catch (error) { toast(error.message, 'error'); } }
 async function updateApplication(opportunityId, applicationId, status) { try { await api(`/api/opportunities/${opportunityId}/applications/${applicationId}`, { method: 'PATCH', body: JSON.stringify({ status }) }); toast('Estado actualizado.'); loadApplicants(opportunityId); } catch (error) { toast(error.message, 'error'); } }
 
@@ -804,13 +904,15 @@ function openProfileForm() {
   const user = currentUser();
   const profile = user.profile || user.user_profiles?.[0] || {};
   openModal(`<h2>Mi perfil</h2><form id="profileForm" class="stack-form">
-    <input name="full_name" required placeholder="Nombre completo" value="${escapeHtml(user.name || user.full_name || '')}">
-    <input name="email" type="email" required placeholder="Correo" value="${escapeHtml(user.email || '')}">
-    <input name="phone" placeholder="Telefono" value="${escapeHtml(profile.phone || user.phone || '')}">
-    <input name="photo_url" placeholder="URL de foto de perfil" value="${escapeHtml(profile.photo_url || user.photo_url || '')}">
-    <input name="organization_position" placeholder="Cargo / area" value="${escapeHtml(profile.organization_position || '')}">
+    <input name="first_name" required placeholder="Nombres" value="${escapeHtml(user.first_name || '')}">
+    <input name="last_name" required placeholder="Apellidos" value="${escapeHtml(user.last_name || '')}">
+    <input name="email" type="email" readonly aria-readonly="true" title="El correo de acceso no se modifica desde el perfil" placeholder="Correo" value="${escapeHtml(user.email || '')}">
+    <input name="dni" required inputmode="numeric" pattern="[0-9]{8}" maxlength="8" placeholder="DNI (8 dígitos)" value="${escapeHtml(user.dni || '')}">
+    <input name="birth_date" required type="date" placeholder="Fecha de nacimiento" value="${escapeHtml(user.birth_date || '')}">
+    <input name="phone" required type="tel" inputmode="tel" pattern="[0-9+()\s-]{7,20}" maxlength="20" placeholder="Teléfono" value="${escapeHtml(user.phone || profile.phone || '')}">
+    <input name="ong_affiliation" type="text" autocomplete="organization" maxlength="120" placeholder="ONG a la que perteneces (opcional)" value="${escapeHtml(user.ong_affiliation || user.organization || '')}">
     <input name="skills" placeholder="Habilidades separadas por coma" value="${escapeHtml((profile.skills || user.skills || []).join ? (profile.skills || user.skills || []).join(', ') : '')}">
-    <textarea name="bio" placeholder="Descripcion breve">${escapeHtml(profile.bio || user.bio || '')}</textarea>
+    <textarea name="bio" placeholder="Descripción breve">${escapeHtml(profile.bio || user.bio || '')}</textarea>
     <button type="submit">Guardar perfil</button>
   </form>`);
   byId('profileForm').onsubmit = saveProfile;
@@ -822,7 +924,7 @@ async function saveProfile(event) {
   try {
     const updated = await api('/api/profile/me', { method: 'PUT', body: JSON.stringify(data) });
     const user = currentUser();
-    const merged = { ...user, name: updated.full_name || data.full_name, full_name: updated.full_name || data.full_name, email: updated.email || data.email, profile: updated.user_profiles?.[0] || data };
+    const merged = { ...user, name: updated.full_name, full_name: updated.full_name, first_name: updated.first_name || data.first_name, last_name: updated.last_name || data.last_name, dni: updated.dni || data.dni, birth_date: updated.birth_date || data.birth_date, phone: updated.phone || data.phone, ong_affiliation: updated.ong_affiliation ?? data.ong_affiliation ?? user.ong_affiliation ?? null, organization: updated.ong_affiliation ?? data.ong_affiliation ?? user.organization ?? 'Sin ONG indicada', email: updated.email || user.email, profile: updated.user_profiles?.[0] || { skills: data.skills, bio: data.bio } };
     localStorage.setItem('kms_user', JSON.stringify(merged));
     toast('Perfil actualizado correctamente.');
     closeModal();
