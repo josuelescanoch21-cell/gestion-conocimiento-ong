@@ -961,7 +961,7 @@ async function updateDocumentStatus(id, status) {
 
 
 window.KMS = { demo, currentUser, canRead, escapeHtml, layoutInit, renderDashboard, renderKnowledge, renderLaws, setLawTag, setLawCategory, clearLawFilters, openLawForm, renderDocuments, renderOpportunities, renderCards, api, toast, openModal, closeModal, openArticle, openArticleForm, saveArticle, publishArticle, favoriteArticle, renderMyApplications, renderMyFavorites, openOpportunityForm, saveOpportunity, openApplyForm, submitApplication, loadApplicants, updateApplication, loadTaxonomy, openTaxonomyManager, trackFrontendEvent, openProfileForm, saveProfile, openDocumentForm, saveDocument, updateDocumentStatus,
-  // cambio para el chat IA: getter de las leyes visibles/filtradas, usado por public/js/legal-chat.js
+  // cambio para el chat IA: getter de las leyes visibles/filtradas, usado por public/js/ai-chat-widget.js
   getLawsChatContext: () => state.lawsChatContext || [],
   // cambio para el foro: se expone para reutilizarla en la busqueda del foro (public/js/forum.js)
   normalizeSearchText };

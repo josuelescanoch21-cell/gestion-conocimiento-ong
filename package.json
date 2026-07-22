@@ -1,11 +1,11 @@
 {
   "name": "gestion-conocimiento-ong",
-  "version": "1.5.0",
-  "description": "Frontend de gestion de conocimiento para ONG conectado directamente a Supabase.",
-  "main": "static-server.js",
+  "version": "2.0.0",
+  "description": "Plataforma de gestion de conocimiento para ONG. Frontend estatico servido por Express, conectado directamente a Supabase, con un backend minimo para el asistente IA (Gemini).",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node static-server.js"
+    "start": "node server.js"
   },
   "keywords": [
     "ong",
@@ -16,8 +16,9 @@
   ],
   "author": "Proyecto Final Gestion del Conocimiento",
   "license": "MIT",
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "express": "^4.22.2"
+  },
   "engines": {
     "node": ">=18"
   }

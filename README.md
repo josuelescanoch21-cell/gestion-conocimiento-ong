@@ -6,14 +6,16 @@ Proyecto universitario simplificado a **Frontend + Supabase directo**.
 
 - HTML, CSS y JavaScript puro
 - Supabase PostgreSQL
-- Railway solo como hosting del frontend estático
+- Node.js + Express: sirve el frontend estático (`public/`) y expone la única ruta de backend
+  real, `POST /api/chat`, usada por el asistente IA
+- Railway como hosting
 - GitHub como repositorio
 
 ## Estructura final
 
 ```txt
 GC/
-├── public/
+├── public/                      # Todo el frontend estatico (servido por Express)
 │   ├── css/
 │   ├── js/
 │   │   ├── supabase-config.js
@@ -22,7 +24,10 @@ GC/
 │   │   ├── analytics.js
 │   │   ├── audit.js
 │   │   ├── search.js
-│   │   └── forum.js
+│   │   ├── forum.js
+│   │   ├── laws-data.js
+│   │   ├── ui-shell.js
+│   │   └── ai-chat-widget.js    # Burbuja del asistente IA, llama a POST /api/chat
 │   ├── index.html
 │   ├── login.html
 │   ├── dashboard.html
@@ -33,14 +38,24 @@ GC/
 │   ├── analytics.html
 │   ├── leyes.html
 │   └── foro.html
+├── server/                      # Backend minimo (Express)
+│   ├── routes/
+│   │   └── gemini.js            # POST /api/chat
+│   ├── services/
+│   │   └── geminiService.js     # Contexto + llamada a la API de Gemini
+│   ├── config/
+│   │   └── env.js               # Lectura centralizada de variables de entorno
+│   └── middleware/
+│       └── rateLimit.js         # Limite de preguntas por IP para el chat IA
 ├── database/
 │   ├── schema.sql
 │   ├── seed_final.sql
 │   ├── frontend_policies.sql
 │   └── migration_legal_taxonomy.sql
+├── server.js                    # Punto de entrada: Express, sirve public/ y monta /api
 ├── package.json
 ├── package-lock.json
-├── static-server.js
+├── .env.example
 ├── Procfile
 └── README.md
 ```
@@ -84,9 +99,14 @@ No colocar aquí la Secret Key ni Service Role Key.
 
 ## Despliegue en Railway
 
-Railway sirve los archivos estáticos del frontend. La única ruta de backend real es
-`POST /api/ai/legal-chat` (ver sección "Asistente legal con IA" más abajo); todo lo demás
-sigue siendo Supabase directo desde el navegador, sin backend Express ni más rutas `/api`.
+Railway sirve los archivos estáticos del frontend (carpeta `public/`) a través de un servidor
+Express. La única ruta de backend real es `POST /api/chat` (ver sección "Asistente legal con IA"
+más abajo); todo lo demás sigue siendo Supabase directo desde el navegador, sin más rutas `/api`
+en el servidor.
+
+Variables de entorno necesarias en Railway (pestaña **Variables** del servicio): al menos
+`GEMINI_API_KEY`. Railway asigna `PORT` automáticamente. Ver `.env.example` para el resto de
+variables opcionales.
 
 Comando de inicio:
 
@@ -97,7 +117,7 @@ npm start
 El archivo que levanta el sitio es:
 
 ```txt
-static-server.js
+server.js
 ```
 
 ## Asistente legal con IA (cambio para el chat IA)
@@ -106,10 +126,10 @@ Panel de chat fijo dentro de **Leyes ONG**, al costado de los filtros/resultados
 preguntas basándose únicamente en las leyes visibles/filtradas en esa página (no inventa
 normas), usando el modelo gratuito **Gemini 2.5 Flash** de Google.
 
-- **Quién lo ve**: solo `creador_ong` y `voluntario`. El administrador no participa (mismo
-  criterio que en el Foro: modera, no conversa).
-- **Dónde vive la lógica**: `public/js/legal-chat.js` (frontend) y `static-server.js`
-  (backend mínimo que llama a Gemini sin exponer la key al navegador).
+- **Quién lo ve**: `administrador`, `creador_ong` y `voluntario` (los 3 roles).
+- **Dónde vive la lógica**: `public/js/ai-chat-widget.js` (frontend, llama a `POST /api/chat`)
+  y `server/routes/gemini.js` + `server/services/geminiService.js` (backend mínimo que llama a
+  Gemini sin exponer la key al navegador).
 - **No se guarda nada**: las preguntas y respuestas no se persisten en Supabase ni en logs;
   cada consulta es efímera.
 - **Variable de entorno requerida**: `GEMINI_API_KEY`.
